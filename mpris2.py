@@ -1,4 +1,10 @@
-# from __future__ import absolute_import
+"""
+A plugin to control any MPRIS2 player.
+
+Initially based on the Spotify plugin
+(https://github.com/stephenrjohnson/Kupfer-Spotify) and Python MPRIS-2 Remote
+(https://bitbucket.org/whitelynx/pymprisr/overview)
+"""
 
 __kupfer_name__ = _("MPRIS2")
 __kupfer_sources__ = ("Mpris2Source", )
