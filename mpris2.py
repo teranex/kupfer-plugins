@@ -102,7 +102,9 @@ class ShowPlaying (Mpris2RunnableLeaf):
         RunnableLeaf.__init__(self, name=_("Show Playing"))
     def run(self):
         meta = self.get_property('Metadata')
-        uiutils.show_notification(self.format_metadata(meta))
+        title = meta.get('xesam:title', 'unknown')
+        icon = meta.get('mpris:artUrl', 'applications-multimedia')
+        uiutils.show_notification(title, self.format_metadata(meta), icon)
     def get_description(self):
         return _("Show information about the current track in MPRIS2 Player")
     def get_icon_name(self):
@@ -113,14 +115,19 @@ class ShowPlaying (Mpris2RunnableLeaf):
         album = meta.get('xesam:album', 'unknown')
         artist = 'unknown'
         artists = meta.get('xesam:artist', [])
+        length = meta.get('mpris:length', 0)
+        # see http://stackoverflow.com/a/539360/306800
+        length = length / 1000000 # mpris gives the length in microseconds
+        hours, remainder = divmod(length, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        duration = '%d:%02d:%02d' % (hours, minutes, seconds)
         if len(artist) > 0:
             artist = artists[0]
-        title = meta.get('xesam:title', 'unknown')
         track_nr = meta.get('xesam:trackNumber', 'unknown')
         return """
-               {0}
-               by {1}
-               from {2} (track {3})""".format(title, artist, album, track_nr)
+               by <i>{0}</i>
+               from <i>{1}</i>
+               track: {2} - duration: {3}""".format(artist, album, track_nr, duration)
 
 class Mpris2Source (AppLeafContentMixin, Source):
     appleaf_content_id = 'mpris2'
