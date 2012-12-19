@@ -98,13 +98,19 @@ class Previous (Mpris2RunnableLeaf):
         return "media-skip-backward"
 
 class ShowPlaying (Mpris2RunnableLeaf):
+    '''
+    notification_id will be used to store the id of the notification displaying the track information
+    this way we can replace the notification if the user runs this leaf a few times
+    '''
+    notification_id = 0
+
     def __init__(self):
         RunnableLeaf.__init__(self, name=_("Show Playing"))
     def run(self):
         meta = self.get_property('Metadata')
         title = meta.get('xesam:title', 'unknown')
         icon = meta.get('mpris:artUrl', 'applications-multimedia')
-        uiutils.show_notification(title, self.format_metadata(meta), icon)
+        ShowPlaying.notification_id = uiutils.show_notification(title, self.format_metadata(meta), icon, ShowPlaying.notification_id)
     def get_description(self):
         return _("Show information about the current track in MPRIS2 Player")
     def get_icon_name(self):
