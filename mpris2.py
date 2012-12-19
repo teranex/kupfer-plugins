@@ -16,10 +16,10 @@ import dbus
 
 from kupfer.objects import RunnableLeaf, Source
 from kupfer.obj.apps import AppLeafContentMixin
-from kupfer import utils, icons, pretty
+from kupfer import utils, icons, pretty, uiutils
 
 class Mpris2RunnableLeaf (RunnableLeaf):
-    def get_player(self):
+    def get_target_object(self):
         bus = dbus.SessionBus()
         target = None
         dbusObj = bus.get_object('org.freedesktop.DBus', '/')
@@ -27,9 +27,15 @@ class Mpris2RunnableLeaf (RunnableLeaf):
             if name.startswith('org.mpris.MediaPlayer2.'):
                 target = name
                 break
-        targetObject = bus.get_object(target, '/org/mpris/MediaPlayer2')
-        player = dbus.Interface(targetObject, dbus_interface='org.mpris.MediaPlayer2.Player')
-        return player
+        return bus.get_object(target, '/org/mpris/MediaPlayer2')
+
+    def get_player(self):
+        return dbus.Interface(self.get_target_object(), dbus_interface='org.mpris.MediaPlayer2.Player')
+
+    def get_property(self, property_name):
+        properties_manager = dbus.Interface(self.get_target_object(), 'org.freedesktop.DBus.Properties')
+        return properties_manager.Get('org.mpris.MediaPlayer2.Player', property_name)
+
 
 class PlayPause (Mpris2RunnableLeaf):
     def __init__(self):
@@ -91,6 +97,31 @@ class Previous (Mpris2RunnableLeaf):
     def get_icon_name(self):
         return "media-skip-backward"
 
+class ShowPlaying (Mpris2RunnableLeaf):
+    def __init__(self):
+        RunnableLeaf.__init__(self, name=_("Show Playing"))
+    def run(self):
+        meta = self.get_property('Metadata')
+        uiutils.show_notification(self.format_metadata(meta))
+    def get_description(self):
+        return _("Show information about the current track in MPRIS2 Player")
+    def get_icon_name(self):
+        return "applications-multimedia"
+
+    @staticmethod
+    def format_metadata(meta):
+        album = meta.get('xesam:album', 'unknown')
+        artist = 'unknown'
+        artists = meta.get('xesam:artist', [])
+        if len(artist) > 0:
+            artist = artists[0]
+        title = meta.get('xesam:title', 'unknown')
+        track_nr = meta.get('xesam:trackNumber', 'unknown')
+        return """
+               {0}
+               by {1}
+               from {2} (track {3})""".format(title, artist, album, track_nr)
+
 class Mpris2Source (AppLeafContentMixin, Source):
     appleaf_content_id = 'mpris2'
     def __init__(self):
@@ -102,6 +133,7 @@ class Mpris2Source (AppLeafContentMixin, Source):
         yield Play()
         yield Stop()
         yield Pause()
+        yield ShowPlaying()
     def provides(self):
         yield RunnableLeaf
     def get_description(self):
