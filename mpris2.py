@@ -29,6 +29,9 @@ class Mpris2RunnableLeaf (RunnableLeaf):
                 break
         return bus.get_object(target, '/org/mpris/MediaPlayer2')
 
+    def get_rootobject(self):
+        return dbus.Interface(self.get_target_object(), dbus_interface='org.mpris.MediaPlayer2')
+
     def get_player(self):
         return dbus.Interface(self.get_target_object(), dbus_interface='org.mpris.MediaPlayer2.Player')
 
@@ -97,6 +100,18 @@ class Previous (Mpris2RunnableLeaf):
     def get_icon_name(self):
         return "media-skip-backward"
 
+class Quit (Mpris2RunnableLeaf):
+    def __init__(self):
+        RunnableLeaf.__init__(self, name=_("Quit"))
+    def run(self):
+        self.get_rootobject().Quit()
+    def get_description(self):
+        return _("Quit the MPRIS2 Player")
+    def get_gicon(self):
+        return icons.ComposedIconSmall("applications-multimedia", self.get_icon_name())
+    def get_icon_name(self):
+        return "application-exit"
+
 class ShowPlaying (Mpris2RunnableLeaf):
     '''
     notification_id will be used to store the id of the notification displaying the track information
@@ -108,6 +123,7 @@ class ShowPlaying (Mpris2RunnableLeaf):
         RunnableLeaf.__init__(self, name=_("Show Playing"))
     def run(self):
         meta = self.get_property('Metadata')
+        pretty.print_debug(__name__, meta)
         title = meta.get('xesam:title', 'unknown')
         icon = meta.get('mpris:artUrl', 'applications-multimedia')
         ShowPlaying.notification_id = uiutils.show_notification(title, self.format_metadata(meta), icon, ShowPlaying.notification_id)
@@ -145,10 +161,11 @@ class Mpris2Source (AppLeafContentMixin, Source):
         yield Play()
         yield Stop()
         yield Pause()
+        yield Quit()
         yield ShowPlaying()
     def provides(self):
         yield RunnableLeaf
     def get_description(self):
         return __description__
     def get_icon_name(self):
-        return "media-playback-start"
+        return "applications-multimedia"
