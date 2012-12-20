@@ -130,10 +130,9 @@ class ShowPlaying (Mpris2RunnableLeaf):
         if len(artist) > 0:
             artist = artists[0]
         track_nr = meta.get('xesam:trackNumber', 'unknown')
-        return """
-               by <i>{0}</i>
-               from <i>{1}</i>
-               track: {2} - duration: {3}""".format(artist, album, track_nr, duration)
+        return """by <i>{0}</i>
+from <i>{1}</i>
+track: {2} - duration: {3}""".format(artist, album, track_nr, duration)
 
 class Mpris2Source (AppLeafContentMixin, Source):
     appleaf_content_id = 'mpris2'
