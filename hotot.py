@@ -16,9 +16,13 @@ from kupfer import pretty, plugin_support
 plugin_support.check_dbus_connection()
 
 def get_hotot():
-    bus = dbus.SessionBus()
-    dbusObj = bus.get_object('org.hotot.service', '/org/hotot/service')
-    return dbus.Interface(dbusObj, dbus_interface='org.hotot.service')
+    try:
+        bus = dbus.SessionBus()
+        dbusObj = bus.get_object('org.hotot.service', '/org/hotot/service')
+        return dbus.Interface(dbusObj, dbus_interface='org.hotot.service')
+    except dbus.exceptions.DBusException, err:
+        pretty.print_debug(err)
+    return None
 
 class SendUpdate (Action):
     ''' Create a Tweet with Hotot '''
@@ -43,6 +47,9 @@ class SendUpdate (Action):
     def get_icon_name(self):
         return 'hotot'
 
+    def valid_for_item(self, item):
+        return get_hotot() != None
+
 class Show (Action):
     ''' Show the running Hotot instance '''
     def __init__(self):
@@ -58,7 +65,7 @@ class Show (Action):
         yield AppLeaf
 
     def valid_for_item(self, item):
-        return item.name == 'Hotot'
+        return item.name == 'Hotot' and get_hotot() != None
 
     def get_icon_name(self):
         return "go-jump"
@@ -78,7 +85,7 @@ class Hide (Action):
         yield AppLeaf
 
     def valid_for_item(self, item):
-        return item.name == 'Hotot'
+        return item.name == 'Hotot' and get_hotot() != None
 
     def get_icon_name(self):
         return "window-close"
@@ -98,7 +105,7 @@ class Quit (Action):
         yield AppLeaf
 
     def valid_for_item(self, item):
-        return item.name == 'Hotot'
+        return item.name == 'Hotot' and get_hotot() != None
 
     def get_icon_name(self):
         return "application-exit"
