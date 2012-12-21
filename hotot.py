@@ -3,7 +3,7 @@ A plugin to control Hotot
 """
 
 __kupfer_name__ = _("Hotot")
-__kupfer_actions__ = ("SendUpdate", "Show", )
+__kupfer_actions__ = ("SendUpdate", "Show", "Hide", "Quit", )
 __description__ = _("Control Hotot")
 __version__ = "0.1"
 __author__ = "Jeroen Budts <jeroen@budts.be>"
@@ -58,3 +58,43 @@ class Show (Action):
 
     def get_icon_name(self):
         return "go-jump"
+
+class Hide (Action):
+    ''' Hide the running Hotot instance '''
+    def __init__(self):
+        Action.__init__(self, _('Hide'))
+
+    def get_description(self):
+        return _('Hide the running Hotot instance')
+
+    def activate(self, leaf):
+        get_hotot().hide()
+
+    def item_types(self):
+        yield AppLeaf
+
+    def valid_for_item(self, item):
+        return item.name == 'Hotot'
+
+    def get_icon_name(self):
+        return "window-close"
+
+class Quit (Action):
+    ''' Quit the running Hotot instance '''
+    def __init__(self):
+        Action.__init__(self, _('Quit'))
+
+    def get_description(self):
+        return _('Quit the running Hotot instance')
+
+    def activate(self, leaf):
+        get_hotot().quit()
+
+    def item_types(self):
+        yield AppLeaf
+
+    def valid_for_item(self, item):
+        return item.name == 'Hotot'
+
+    def get_icon_name(self):
+        return "application-exit"
