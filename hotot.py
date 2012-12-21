@@ -28,7 +28,9 @@ class SendUpdate (Action):
 
     def activate(self, leaf, ctx):
         pretty.print_debug(__name__, leaf.object)
-        get_hotot().update_status(leaf.object)
+        text = leaf.object.replace('"', '\\"')
+        pretty.print_debug(__name__, "SendUpdate: "+text)
+        get_hotot().update_status(text)
 
     def item_types(self):
         yield TextLeaf
