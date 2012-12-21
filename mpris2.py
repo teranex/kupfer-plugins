@@ -126,7 +126,10 @@ class ShowPlaying (Mpris2RunnableLeaf):
         pretty.print_debug(__name__, meta)
         title = meta.get('xesam:title', 'unknown')
         icon = meta.get('mpris:artUrl', 'applications-multimedia')
-        ShowPlaying.notification_id = uiutils.show_notification(title, self.format_metadata(meta), icon, ShowPlaying.notification_id)
+        ShowPlaying.notification_id = uiutils.show_notification(title,
+                                                                self.format_metadata(meta).replace('&', '&amp;'),
+                                                                icon,
+                                                                ShowPlaying.notification_id)
     def get_description(self):
         return _("Show information about the current track in MPRIS2 Player")
     def get_icon_name(self):
