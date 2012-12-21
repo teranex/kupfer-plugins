@@ -3,31 +3,23 @@ A plugin to control Hotot
 """
 
 __kupfer_name__ = _("Hotot")
-# __kupfer_sources__ = ("HototSource", )
-__kupfer_actions__ = ("SendUpdate",)
+__kupfer_actions__ = ("SendUpdate", "Show", )
 __description__ = _("Control Hotot")
 __version__ = "0.1"
 __author__ = "Jeroen Budts <jeroen@budts.be>"
 
 import dbus
 
-from kupfer.objects import Action, TextLeaf
+from kupfer.objects import Action, TextLeaf, AppLeaf
 from kupfer import pretty
 
-# class HototSource (AppLeafContentMixin, Source):
-#     appleaf_content_id = "hotot"
-#     def __init__(self):
-#         Source.__init__(self, _("Hotot"))
-#     def get_items(self):
-#         []
-#     def provides(self):
-#         []
-#     def get_description(self):
-#         return __description__
-#     def get_icon_name(self):
-#         return 'hotot'
+def get_hotot():
+    bus = dbus.SessionBus()
+    dbusObj = bus.get_object('org.hotot.service', '/org/hotot/service')
+    return dbus.Interface(dbusObj, dbus_interface='org.hotot.service')
 
 class SendUpdate (Action):
+    ''' Create a Tweet with Hotot '''
     def __init__(self):
         Action.__init__(self, _("Send Update"))
 
@@ -36,11 +28,7 @@ class SendUpdate (Action):
 
     def activate(self, leaf, ctx):
         pretty.print_debug(__name__, leaf.object)
-
-        bus = dbus.SessionBus()
-        dbusObj = bus.get_object('org.hotot.service', '/org/hotot/service')
-        obj = dbus.Interface(dbusObj, dbus_interface='org.hotot.service')
-        obj.update_status(leaf.object)
+        get_hotot().update_status(leaf.object)
 
     def item_types(self):
         yield TextLeaf
@@ -50,3 +38,23 @@ class SendUpdate (Action):
 
     def get_icon_name(self):
         return 'hotot'
+
+class Show (Action):
+    ''' Show the running Hotot instance '''
+    def __init__(self):
+        Action.__init__(self, _('Show'))
+
+    def get_description(self):
+        return _('Show the running Hotot instance')
+
+    def activate(self, leaf):
+        get_hotot().show()
+
+    def item_types(self):
+        yield AppLeaf
+
+    def valid_for_item(self, item):
+        return item.name == 'Hotot'
+
+    def get_icon_name(self):
+        return "go-jump"
