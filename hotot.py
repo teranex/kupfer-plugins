@@ -11,7 +11,9 @@ __author__ = "Jeroen Budts <jeroen@budts.be>"
 import dbus
 
 from kupfer.objects import Action, TextLeaf, AppLeaf
-from kupfer import pretty
+from kupfer import pretty, plugin_support
+
+plugin_support.check_dbus_connection()
 
 def get_hotot():
     bus = dbus.SessionBus()
