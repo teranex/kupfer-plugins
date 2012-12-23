@@ -50,16 +50,17 @@ class SendUpdate (Action):
     def valid_for_item(self, item):
         return get_hotot() != None
 
-class Show (Action):
-    ''' Show the running Hotot instance '''
-    def __init__(self):
-        Action.__init__(self, _('Show'))
+class HototAction (Action):
+    def __init__(self, action, func):
+        self.action = action
+        self.func = func
+        Action.__init__(self, _(action))
 
     def get_description(self):
-        return _('Show the running Hotot instance')
+        return _(self.action + ' the running Hotot instance')
 
     def activate(self, leaf):
-        get_hotot().show()
+        self.func(get_hotot())
 
     def item_types(self):
         yield AppLeaf
@@ -67,45 +68,26 @@ class Show (Action):
     def valid_for_item(self, item):
         return item.name == 'Hotot' and get_hotot() != None
 
+class Show (HototAction):
+    def __init__(self):
+        def show_action(hotot):
+            hotot.show()
+        HototAction.__init__(self, 'Show', show_action)
     def get_icon_name(self):
         return "go-jump"
 
-class Hide (Action):
-    ''' Hide the running Hotot instance '''
+class Hide (HototAction):
     def __init__(self):
-        Action.__init__(self, _('Hide'))
-
-    def get_description(self):
-        return _('Hide the running Hotot instance')
-
-    def activate(self, leaf):
-        get_hotot().hide()
-
-    def item_types(self):
-        yield AppLeaf
-
-    def valid_for_item(self, item):
-        return item.name == 'Hotot' and get_hotot() != None
-
+        def hide_action(hotot):
+            hotot.hide()
+        HototAction.__init__(self, 'Hide', hide_action)
     def get_icon_name(self):
         return "window-close"
 
-class Quit (Action):
-    ''' Quit the running Hotot instance '''
+class Quit (HototAction):
     def __init__(self):
-        Action.__init__(self, _('Quit'))
-
-    def get_description(self):
-        return _('Quit the running Hotot instance')
-
-    def activate(self, leaf):
-        get_hotot().quit()
-
-    def item_types(self):
-        yield AppLeaf
-
-    def valid_for_item(self, item):
-        return item.name == 'Hotot' and get_hotot() != None
-
+        def quit_action(hotot):
+            hotot.quit()
+        HototAction.__init__(self, 'Quit', quit_action)
     def get_icon_name(self):
         return "application-exit"
