@@ -57,7 +57,7 @@ class HototAction (Action):
         return _(self.action + ' the running Hotot instance')
 
     def activate(self, leaf):
-        self.func(get_hotot())
+        self.func()
 
     def item_types(self):
         yield AppLeaf
@@ -67,24 +67,18 @@ class HototAction (Action):
 
 class Show (HototAction):
     def __init__(self):
-        def show_action(hotot):
-            hotot.show()
-        HototAction.__init__(self, 'Show', show_action)
+        HototAction.__init__(self, 'Show', lambda: get_hotot().show())
     def get_icon_name(self):
         return "go-jump"
 
 class Hide (HototAction):
     def __init__(self):
-        def hide_action(hotot):
-            hotot.hide()
-        HototAction.__init__(self, 'Hide', hide_action)
+        HototAction.__init__(self, 'Hide', lambda: get_hotot().hide())
     def get_icon_name(self):
         return "window-close"
 
 class Quit (HototAction):
     def __init__(self):
-        def quit_action(hotot):
-            hotot.quit()
-        HototAction.__init__(self, 'Quit', quit_action)
+        HototAction.__init__(self, 'Quit', lambda: get_hotot().quit())
     def get_icon_name(self):
         return "application-exit"
