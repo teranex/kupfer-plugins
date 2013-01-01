@@ -29,10 +29,7 @@ class SendUpdate (Action):
     def __init__(self):
         Action.__init__(self, _("Send Update"))
 
-    def wants_context(self):
-        return True
-
-    def activate(self, leaf, ctx):
+    def activate(self, leaf):
         pretty.print_debug(__name__, leaf.object)
         text = leaf.object.replace('"', '\\"')
         pretty.print_debug(__name__, "SendUpdate: "+text)
