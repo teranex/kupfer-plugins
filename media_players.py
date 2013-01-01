@@ -8,7 +8,7 @@ __author__ = "Jeroen Budts <jeroen@budts.be>"
 
 import dbus
 
-from kupfer import pretty, plugin_support
+from kupfer import pretty, plugin_support, icons, uiutils
 from kupfer.objects import Source, Leaf, Action
 from kupfer.obj.base import ActionGenerator
 from kupfer.weaklib import dbus_signal_connect_weakly
@@ -83,6 +83,24 @@ class MediaPlayersRegistry (object):
 
     def get_player(self, name):
         return self.active_players[name]
+
+
+def format_metadata(meta):
+    album = meta.get('xesam:album', _('unknown'))
+    artist = _('unknown')
+    artists = meta.get('xesam:artist', [])
+    length = meta.get('mpris:length', 0)
+    # see http://stackoverflow.com/a/539360/306800
+    length = length / 1000000 # mpris gives the length in microseconds
+    hours, remainder = divmod(length, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    duration = '%d:%02d:%02d' % (hours, minutes, seconds)
+    if len(artist) > 0:
+        artist = artists[0]
+    track_nr = meta.get('xesam:trackNumber', _('unknown'))
+    return """by <i>{0}</i>
+from <i>{1}</i>
+track: {2} - duration: {3}""".format(artist, album, track_nr, duration)
 
 
 media_players_registry = MediaPlayersRegistry()
@@ -219,6 +237,35 @@ class Quit (MediaPlayerCommandLeaf):
         player.root.Quit()
 
 
+class ShowPlaying (MediaPlayerCommandLeaf):
+    notification_id = 0
+
+    def __init__(self):
+        Leaf.__init__(self, [], _("Show Playing"))
+
+    def get_description(self):
+        return _("Show information about the current track in the media player")
+
+    def get_gicon(self):
+        return icons.ComposedIcon("dialog-information", "audio-x-generic")
+
+    def get_icon_name(self):
+        return "dialog-information"
+
+    # def get_icon_name(self):
+    #     return "applications-multimedia"
+
+    def do_command(self, player):
+        meta = player.get_player_property('Metadata')
+        pretty.print_debug(__name__, meta)
+        title = meta.get('xesam:title', _('unknown'))
+        icon = meta.get('mpris:artUrl', 'applications-multimedia')
+        ShowPlaying.notification_id = uiutils.show_notification(title,
+                                                                format_metadata(meta).replace('&', '&amp;'),
+                                                                icon,
+                                                                ShowPlaying.notification_id)
+
+
 class MediaPlayersSource (Source):
     '''build a list of currently running media players'''
     def __init__(self):
@@ -251,8 +298,9 @@ class MediaPlayerCommandsSource (Source):
     def get_items(self):
         yield PlayPause()
         yield Play()
-        yield Stop()
         yield Pause()
+        yield Stop()
         yield Next()
         yield Previous()
+        yield ShowPlaying()
         yield Quit()
