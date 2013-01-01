@@ -1,7 +1,6 @@
 __kupfer_name__ = _("Media Players")
 __kupfer_sources__ = ("MediaPlayerCommandsSource", )
 # __kupfer_actions__ = ("Play", )
-__kupfer_action_generators__ = ("MediaPlayersGenerator", )
 __description__ = _("Control any MPRIS2 media player")
 __version__ = "0.1"
 __author__ = "Jeroen Budts <jeroen@budts.be>"
@@ -16,6 +15,7 @@ from gio.unix import DesktopAppInfo
 
 plugin_support.check_dbus_connection()
 
+# {{{ supporting classes and functions
 class MediaPlayer (object):
     def __init__(self, dbus_obj):
         self._dbus_obj = dbus_obj
@@ -106,16 +106,10 @@ def format_metadata(meta):
     return """by <i>{0}</i>
 from <i>{1}</i>
 track: {2} - duration: {3}""".format(artist, album, track_nr, duration)
+# }}}
 
 
 media_players_registry = MediaPlayersRegistry()
-
-
-class MediaPlayersGenerator (ActionGenerator):
-    def get_actions_for_leaf(self, leaf):
-        if (isinstance(leaf, MediaPlayerCommandLeaf)):
-            return [MediaPlayerAction(player) for player in media_players_registry.players]
-        return []
 
 
 class MediaPlayerAction (Action):
@@ -135,11 +129,15 @@ class MediaPlayerAction (Action):
         return self._player.description
 
 
+# {{{ Leafs
 class MediaPlayerCommandLeaf (Leaf):
     '''a media player leaf'''
 
     def do_command(self, player):
         raise NotImplementedError('Subclasses should implement this method')
+
+    def get_actions(self):
+        return [MediaPlayerAction(player) for player in media_players_registry.players]
 
 
 class PlayPause (MediaPlayerCommandLeaf):
@@ -258,6 +256,7 @@ class ShowPlaying (MediaPlayerCommandLeaf):
         return "dialog-information"
 
     def do_command(self, player):
+        # TODO: more error checking (for example when no track is selected in Banshee)
         meta = player.get_player_property('Metadata')
         if (len(meta) > 0):
             pretty.print_debug(__name__, meta)
@@ -281,21 +280,7 @@ class Raise (MediaPlayerCommandLeaf):
 
     def do_command(self, player):
         player.root.Raise()
-
-
-class MediaPlayersSource (Source):
-    '''build a list of currently running media players'''
-    def __init__(self):
-        Source.__init__(self, _("Media Players"))
-
-    def get_description(self):
-        return __description__
-
-    def initialize(self):
-        pass
-
-    def _signal_update(self, *args):
-        pretty.print_debug('update: ' + ' # '.join(args))
+# }}}
 
 
 class MediaPlayerCommandsSource (Source):
@@ -322,3 +307,5 @@ class MediaPlayerCommandsSource (Source):
         yield Previous()
         yield ShowPlaying()
         yield Quit()
+
+# vim: fdm=marker
