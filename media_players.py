@@ -148,6 +148,9 @@ class PlayPause (MediaPlayerCommandLeaf):
     def get_icon_name(self):
         return "media-playback-start"
 
+    def get_gicon(self):
+        return icons.ComposedIconSmall(self.get_icon_name(), "media-playback-pause")
+
     def get_description(self):
         return _("Resume/Pause playback in the media player")
 
