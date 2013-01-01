@@ -112,7 +112,7 @@ track: {2} - duration: {3}""".format(artist, album, track_nr, duration)
 media_players_registry = MediaPlayersRegistry()
 
 
-class MediaPlayerAction (Action):
+class RunningMediaPlayerTarget (Action):
     def __init__(self, player):
         self._player = media_players_registry.get_player(player)
         Action.__init__(self, player)
@@ -137,7 +137,7 @@ class MediaPlayerCommandLeaf (Leaf):
         raise NotImplementedError('Subclasses should implement this method')
 
     def get_actions(self):
-        return [MediaPlayerAction(player) for player in media_players_registry.players]
+        return [RunningMediaPlayerTarget(player) for player in media_players_registry.players]
 
 
 class PlayPause (MediaPlayerCommandLeaf):
