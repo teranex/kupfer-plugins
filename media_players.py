@@ -257,13 +257,14 @@ class ShowPlaying (MediaPlayerCommandLeaf):
 
     def do_command(self, player):
         meta = player.get_player_property('Metadata')
-        pretty.print_debug(__name__, meta)
-        title = meta.get('xesam:title', _('unknown'))
-        icon = meta.get('mpris:artUrl', 'applications-multimedia')
-        ShowPlaying.notification_id = uiutils.show_notification(title,
-                                                                format_metadata(meta).replace('&', '&amp;'),
-                                                                icon,
-                                                                ShowPlaying.notification_id)
+        if (len(meta) > 0):
+            pretty.print_debug(__name__, meta)
+            title = meta.get('xesam:title', _('unknown'))
+            icon = meta.get('mpris:artUrl', 'applications-multimedia')
+            ShowPlaying.notification_id = uiutils.show_notification(title,
+                                                                    format_metadata(meta).replace('&', '&amp;'),
+                                                                    icon,
+                                                                    ShowPlaying.notification_id)
 
 
 class MediaPlayersSource (Source):
