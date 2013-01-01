@@ -109,6 +109,8 @@ class MediaPlayerAction (Action):
     def get_gicon(self):
         return self._player.icon
 
+    # TODO: add description?
+
 
 class MediaPlayerCommandLeaf (Leaf):
     '''a media player leaf'''
@@ -122,12 +124,99 @@ class PlayPause (MediaPlayerCommandLeaf):
     def __init__(self):
         Leaf.__init__(self, [], _("Play/Pause"))
 
+    def get_icon_name(self):
+        return "media-playback-start"
+
+    def get_description(self):
+        return _("Resume/Pause playback in the media player")
+
     def do_command(self, player):
         player.player.PlayPause()
 
 
+class Play (MediaPlayerCommandLeaf):
+    def __init__(self):
+        Leaf.__init__(self, [], _("Play"))
+
+    def get_icon_name(self):
+        return "media-playback-start"
+
+    def get_description(self):
+        return _("Start playback in the media player")
+
+    def do_command(self, player):
+        player.player.Play()
+
+
+class Stop (MediaPlayerCommandLeaf):
+    def __init__(self):
+        Leaf.__init__(self, [], _("Stop"))
+
+    def get_icon_name(self):
+        return "media-playback-stop"
+
+    def get_description(self):
+        return _("Stop playback in the media player")
+
+    def do_command(self, player):
+        player.player.Stop()
+
+
+class Pause (MediaPlayerCommandLeaf):
+    def __init__(self):
+        Leaf.__init__(self, [], _("Pause"))
+
+    def get_icon_name(self):
+        return "media-playback-pause"
+
+    def get_description(self):
+        return _("Pause playback in the media player")
+
+    def do_command(self, player):
+        player.player.Pause()
+
+
 class Next (MediaPlayerCommandLeaf):
     '''skip to next track in media player'''
+    def __init__(self):
+        Leaf.__init__(self, [], _("Next"))
+
+    def get_icon_name(self):
+        return "media-skip-forward"
+
+    def get_description(self):
+        return _("Jump to the next track in the media player")
+
+    def do_command(self, player):
+        player.player.Next()
+
+
+class Previous (MediaPlayerCommandLeaf):
+    def __init__(self):
+        Leaf.__init__(self, [], _("Previous"))
+
+    def get_icon_name(self):
+        return "media-skip-backward"
+
+    def get_description(self):
+        return _("Jump to the previous track in the media player")
+
+    def do_command(self, player):
+        player.player.Previous()
+
+
+class Quit (MediaPlayerCommandLeaf):
+    def __init__(self):
+        Leaf.__init__(self, [], _("Quit"))
+
+    def get_icon_name(self):
+        return "application-exit"
+
+    def get_description(self):
+        return _("Quit the media player")
+
+    def do_command(self, player):
+        player.root.Quit()
 
 
 class MediaPlayersSource (Source):
@@ -158,4 +247,9 @@ class MediaPlayerCommandsSource (Source):
 
     def get_items(self):
         yield PlayPause()
-        # yield Next()
+        yield Play()
+        yield Stop()
+        yield Pause()
+        yield Next()
+        yield Previous()
+        yield Quit()
