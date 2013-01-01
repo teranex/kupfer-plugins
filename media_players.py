@@ -242,6 +242,9 @@ class MediaPlayerCommandsSource (Source):
     def get_description(self):
         return _("Commands that can be executed on a media player, such as play, pause, next.")
 
+    def get_icon_name(self):
+        return "applications-multimedia"
+
     def provides(self):
         yield MediaPlayerCommandLeaf
 
