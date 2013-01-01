@@ -19,6 +19,9 @@ plugin_support.check_dbus_connection()
 class MediaPlayer (object):
     def __init__(self, dbus_obj):
         self._dbus_obj = dbus_obj
+        entry = self.get_root_property('DesktopEntry')
+        # TODO: handle case of absent DesktopEntry (DesktopEntry is optional according to MPRIS2)
+        self.desktop_app_info = DesktopAppInfo(entry + '.desktop')
 
     @property
     def root(self):
@@ -44,10 +47,11 @@ class MediaPlayer (object):
 
     @property
     def icon(self):
-        # TODO: handle case of absent DesktopEntry (DesktopEntry is optional according to MPRIS2)
-        entry = self.get_root_property('DesktopEntry')
-        app = DesktopAppInfo(entry + '.desktop')
-        return app.get_icon()
+        return self.desktop_app_info.get_icon()
+
+    @property
+    def description(self):
+        return self.desktop_app_info.get_description()
 
 
 class MediaPlayersRegistry (object):
@@ -116,7 +120,6 @@ class MediaPlayersGenerator (ActionGenerator):
 class MediaPlayerAction (Action):
     def __init__(self, player):
         self._player = media_players_registry.get_player(player)
-        # TODO: find desktop entry and use name and icon
         Action.__init__(self, player)
 
 
@@ -127,7 +130,8 @@ class MediaPlayerAction (Action):
     def get_gicon(self):
         return self._player.icon
 
-    # TODO: add description?
+    def get_description(self):
+        return self._player.description
 
 
 class MediaPlayerCommandLeaf (Leaf):
@@ -251,9 +255,6 @@ class ShowPlaying (MediaPlayerCommandLeaf):
 
     def get_icon_name(self):
         return "dialog-information"
-
-    # def get_icon_name(self):
-    #     return "applications-multimedia"
 
     def do_command(self, player):
         meta = player.get_player_property('Metadata')
