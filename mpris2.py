@@ -124,7 +124,7 @@ class ShowPlaying (Mpris2RunnableLeaf):
     def run(self):
         meta = self.get_property('Metadata')
         pretty.print_debug(__name__, meta)
-        title = meta.get('xesam:title', 'unknown')
+        title = meta.get('xesam:title', _('unknown'))
         icon = meta.get('mpris:artUrl', 'applications-multimedia')
         ShowPlaying.notification_id = uiutils.show_notification(title,
                                                                 self.format_metadata(meta).replace('&', '&amp;'),
@@ -137,8 +137,8 @@ class ShowPlaying (Mpris2RunnableLeaf):
 
     @staticmethod
     def format_metadata(meta):
-        album = meta.get('xesam:album', 'unknown')
-        artist = 'unknown'
+        album = meta.get('xesam:album', _('unknown'))
+        artist = _('unknown')
         artists = meta.get('xesam:artist', [])
         length = meta.get('mpris:length', 0)
         # see http://stackoverflow.com/a/539360/306800
@@ -148,13 +148,13 @@ class ShowPlaying (Mpris2RunnableLeaf):
         duration = '%d:%02d:%02d' % (hours, minutes, seconds)
         if len(artist) > 0:
             artist = artists[0]
-        track_nr = meta.get('xesam:trackNumber', 'unknown')
+        track_nr = meta.get('xesam:trackNumber', _('unknown'))
         return """by <i>{0}</i>
 from <i>{1}</i>
 track: {2} - duration: {3}""".format(artist, album, track_nr, duration)
 
-class Mpris2Source (AppLeafContentMixin, Source):
-    appleaf_content_id = 'mpris2'
+class Mpris2Source (Source):
+    # appleaf_content_id = 'mpris2'
     def __init__(self):
         Source.__init__(self, _("MPRIS2"))
     def get_items(self):
