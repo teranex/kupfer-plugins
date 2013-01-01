@@ -12,6 +12,7 @@ from kupfer import pretty, plugin_support
 from kupfer.objects import Source, Leaf, Action
 from kupfer.obj.base import ActionGenerator
 from kupfer.weaklib import dbus_signal_connect_weakly
+from gio.unix import DesktopAppInfo
 
 plugin_support.check_dbus_connection()
 
@@ -40,6 +41,13 @@ class MediaPlayer (object):
 
     def get_root_property(self, property_name):
         return self._get_property('org.mpris.MediaPlayer2', property_name)
+
+    @property
+    def icon(self):
+        # TODO: handle case of absent DesktopEntry (DesktopEntry is optional according to MPRIS2)
+        entry = self.get_root_property('DesktopEntry')
+        app = DesktopAppInfo(entry + '.desktop')
+        return app.get_icon()
 
 
 class MediaPlayersRegistry (object):
@@ -89,14 +97,17 @@ class MediaPlayersGenerator (ActionGenerator):
 
 class MediaPlayerAction (Action):
     def __init__(self, player):
-        self._player = player
+        self._player = media_players_registry.get_player(player)
         # TODO: find desktop entry and use name and icon
         Action.__init__(self, player)
 
+
     def activate(self, leaf):
-        pretty.print_debug("activating for " + self._player)
-        player = media_players_registry.get_player(self._player)
-        leaf.do_command(player)
+        pretty.print_debug(__name__, "activating for " + self._player.name)
+        leaf.do_command(self._player)
+
+    def get_gicon(self):
+        return self._player.icon
 
 
 class MediaPlayerCommandLeaf (Leaf):
