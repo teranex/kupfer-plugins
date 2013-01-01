@@ -2,7 +2,7 @@ __kupfer_name__ = _("Media Players")
 __kupfer_sources__ = ("MediaPlayerCommandsSource", )
 # __kupfer_actions__ = ("Play", )
 __kupfer_action_generators__ = ("MediaPlayersGenerator", )
-__description__ = _("Control any MPRIS2 Media Player")
+__description__ = _("Control any MPRIS2 media player")
 __version__ = "0.1"
 __author__ = "Jeroen Budts <jeroen@budts.be>"
 
@@ -284,7 +284,7 @@ class MediaPlayersSource (Source):
 class MediaPlayerCommandsSource (Source):
     '''returns a list of all the commands available for running media players'''
     def __init__(self):
-        Source.__init__(self, _("Media Player Commands"))
+        Source.__init__(self, _("Media player commands"))
 
     def get_description(self):
         return _("Commands that can be executed on a media player, such as play, pause, next.")
