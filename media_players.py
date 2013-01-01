@@ -90,6 +90,7 @@ class MediaPlayersRegistry (object):
 
 
 def format_metadata(meta):
+    # TODO: check icon and download local cache (for spotify)
     album = meta.get('xesam:album', _('unknown'))
     artist = _('unknown')
     artists = meta.get('xesam:artist', [])
@@ -268,6 +269,20 @@ class ShowPlaying (MediaPlayerCommandLeaf):
                                                                     ShowPlaying.notification_id)
 
 
+class Raise (MediaPlayerCommandLeaf):
+    def __init__(self):
+        Leaf.__init__(self, [], _("Raise player"))
+
+    def get_description(self):
+        return _("Raise the media player")
+
+    def get_icon_name(self):
+        return "go-jump"
+
+    def do_command(self, player):
+        player.root.Raise()
+
+
 class MediaPlayersSource (Source):
     '''build a list of currently running media players'''
     def __init__(self):
@@ -298,6 +313,7 @@ class MediaPlayerCommandsSource (Source):
         yield MediaPlayerCommandLeaf
 
     def get_items(self):
+        yield Raise()
         yield PlayPause()
         yield Play()
         yield Pause()
