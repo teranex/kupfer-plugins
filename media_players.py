@@ -1,6 +1,6 @@
 __kupfer_name__ = _("Media Players")
 __kupfer_sources__ = ("MediaPlayerCommandsSource", )
-# __kupfer_actions__ = ("Play", )
+__kupfer_actions__ = ("PlayPauseAction", )
 __description__ = _("Control any MPRIS2 media player")
 __version__ = "0.1"
 __author__ = "Jeroen Budts <jeroen@budts.be>"
@@ -8,7 +8,7 @@ __author__ = "Jeroen Budts <jeroen@budts.be>"
 import dbus
 
 from kupfer import pretty, plugin_support, icons, uiutils
-from kupfer.objects import Source, Leaf, Action
+from kupfer.objects import Source, Leaf, Action, AppLeaf
 from kupfer.obj.base import ActionGenerator
 from kupfer.weaklib import dbus_signal_connect_weakly
 from gio.unix import DesktopAppInfo
@@ -88,6 +88,9 @@ class MediaPlayersRegistry (object):
     def get_player(self, name):
         return self.active_players[name]
 
+    def has_player(self, name):
+        return name in self.active_players
+
 
 def format_metadata(meta):
     # TODO: check icon and download local cache (for spotify)
@@ -127,6 +130,40 @@ class RunningMediaPlayerTarget (Action):
 
     def get_description(self):
         return self._player.description
+
+
+class MediaPlayerAction (Action):
+    def item_types(self):
+        yield AppLeaf
+
+    def valid_for_item(self, leaf):
+        pretty.print_debug(__name__, "Checking %s action for %s " % (self.name, leaf.get_id()))
+        return media_players_registry.has_player(leaf.get_id())
+
+    def activate(self, leaf):
+        pretty.print_debug(__name__, "activating %s action" % self.name)
+        player = media_players_registry.get_player(leaf.get_id())
+        self.run_action(player)
+
+    def run_action(self, player):
+        raise NotImplementedError('Subclasses should implement this method')
+
+
+class PlayPauseAction (MediaPlayerAction):
+    def __init__(self):
+        Action.__init__(self, _("Play/Pause"))
+
+    def get_description(self):
+        return _("Resume/Pause playback in the media player")
+
+    def get_icon_name(self):
+        return "media-playback-start"
+
+    def get_gicon(self):
+        return icons.ComposedIconSmall(self.get_icon_name(), "media-playback-pause")
+
+    def run_action(self, player):
+        player.player.PlayPause()
 
 
 # {{{ Leafs
