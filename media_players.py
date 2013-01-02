@@ -123,7 +123,7 @@ class RunningMediaPlayerTarget (Action):
 
     def activate(self, leaf):
         pretty.print_debug(__name__, "activating for " + self._player.name)
-        leaf.do_command(self._player)
+        leaf.run_on_player(self._player)
 
     def get_gicon(self):
         return self._player.icon
@@ -158,7 +158,7 @@ class MediaPlayerAction (Action):
         return self.leaf.get_gicon()
 
     def run_action(self, player):
-        self.leaf.do_command(player)
+        self.leaf.run_on_player(player)
 
 
 class PlayPauseAction (MediaPlayerAction):
@@ -171,7 +171,7 @@ class PlayPauseAction (MediaPlayerAction):
 class MediaPlayerCommandLeaf (Leaf):
     '''a media player leaf'''
 
-    def do_command(self, player):
+    def run_on_player(self, player):
         raise NotImplementedError('Subclasses should implement this method')
 
     def get_actions(self):
@@ -192,7 +192,7 @@ class PlayPause (MediaPlayerCommandLeaf):
     def get_description(self):
         return _("Resume/Pause playback in the media player")
 
-    def do_command(self, player):
+    def run_on_player(self, player):
         player.player.PlayPause()
 
 
@@ -206,7 +206,7 @@ class Play (MediaPlayerCommandLeaf):
     def get_description(self):
         return _("Start playback in the media player")
 
-    def do_command(self, player):
+    def run_on_player(self, player):
         player.player.Play()
 
 
@@ -220,7 +220,7 @@ class Stop (MediaPlayerCommandLeaf):
     def get_description(self):
         return _("Stop playback in the media player")
 
-    def do_command(self, player):
+    def run_on_player(self, player):
         player.player.Stop()
 
 
@@ -234,7 +234,7 @@ class Pause (MediaPlayerCommandLeaf):
     def get_description(self):
         return _("Pause playback in the media player")
 
-    def do_command(self, player):
+    def run_on_player(self, player):
         player.player.Pause()
 
 
@@ -249,7 +249,7 @@ class Next (MediaPlayerCommandLeaf):
     def get_description(self):
         return _("Jump to the next track in the media player")
 
-    def do_command(self, player):
+    def run_on_player(self, player):
         player.player.Next()
 
 
@@ -263,7 +263,7 @@ class Previous (MediaPlayerCommandLeaf):
     def get_description(self):
         return _("Jump to the previous track in the media player")
 
-    def do_command(self, player):
+    def run_on_player(self, player):
         player.player.Previous()
 
 
@@ -277,7 +277,7 @@ class Quit (MediaPlayerCommandLeaf):
     def get_description(self):
         return _("Quit the media player")
 
-    def do_command(self, player):
+    def run_on_player(self, player):
         player.root.Quit()
 
 
@@ -296,7 +296,7 @@ class ShowPlaying (MediaPlayerCommandLeaf):
     def get_icon_name(self):
         return "dialog-information"
 
-    def do_command(self, player):
+    def run_on_player(self, player):
         # TODO: more error checking (for example when no track is selected in Banshee)
         meta = player.get_player_property('Metadata')
         if (len(meta) > 0):
@@ -319,7 +319,7 @@ class Raise (MediaPlayerCommandLeaf):
     def get_icon_name(self):
         return "go-jump"
 
-    def do_command(self, player):
+    def run_on_player(self, player):
         player.root.Raise()
 # }}}
 
