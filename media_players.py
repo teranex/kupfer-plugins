@@ -148,22 +148,23 @@ class MediaPlayerAction (Action):
     def run_action(self, player):
         raise NotImplementedError('Subclasses should implement this method')
 
+    def get_description(self):
+        return self.leaf.get_description()
+
+    def get_icon_name(self):
+        return self.leaf.get_icon_name()
+
+    def get_gicon(self):
+        return self.leaf.get_gicon()
+
+    def run_action(self, player):
+        self.leaf.do_command(player)
+
 
 class PlayPauseAction (MediaPlayerAction):
     def __init__(self):
-        Action.__init__(self, _("Play/Pause"))
-
-    def get_description(self):
-        return _("Resume/Pause playback in the media player")
-
-    def get_icon_name(self):
-        return "media-playback-start"
-
-    def get_gicon(self):
-        return icons.ComposedIconSmall(self.get_icon_name(), "media-playback-pause")
-
-    def run_action(self, player):
-        player.player.PlayPause()
+        self.leaf = PlayPause()
+        super(PlayPauseAction, self).__init__(self.leaf.name)
 
 
 # {{{ Leafs
