@@ -1,6 +1,6 @@
 __kupfer_name__ = _("Media Players")
 __kupfer_sources__ = ("MediaPlayerCommandsSource", )
-__kupfer_actions__ = ("PlayPauseAction", )
+__kupfer_actions__ = ("PlayPause", )
 __description__ = _("Control any MPRIS2 media player")
 __version__ = "0.1"
 __author__ = "Jeroen Budts <jeroen@budts.be>"
@@ -161,10 +161,10 @@ class MediaPlayerAction (Action):
         self.leaf.run_on_player(player)
 
 
-class PlayPauseAction (MediaPlayerAction):
+class PlayPause (MediaPlayerAction):
     def __init__(self):
-        self.leaf = PlayPause()
-        super(PlayPauseAction, self).__init__(self.leaf.name)
+        self.leaf = PlayPauseLeaf()
+        super(PlayPause, self).__init__(self.leaf.name)
 
 
 # {{{ Leafs
@@ -178,7 +178,7 @@ class MediaPlayerCommandLeaf (Leaf):
         return [RunningMediaPlayerTarget(player) for player in media_players_registry.players]
 
 
-class PlayPause (MediaPlayerCommandLeaf):
+class PlayPauseLeaf (MediaPlayerCommandLeaf):
     '''play/pause the media player'''
     def __init__(self):
         Leaf.__init__(self, [], _("Play/Pause"))
@@ -196,7 +196,7 @@ class PlayPause (MediaPlayerCommandLeaf):
         player.player.PlayPause()
 
 
-class Play (MediaPlayerCommandLeaf):
+class PlayLeaf (MediaPlayerCommandLeaf):
     def __init__(self):
         Leaf.__init__(self, [], _("Play"))
 
@@ -210,7 +210,7 @@ class Play (MediaPlayerCommandLeaf):
         player.player.Play()
 
 
-class Stop (MediaPlayerCommandLeaf):
+class StopLeaf (MediaPlayerCommandLeaf):
     def __init__(self):
         Leaf.__init__(self, [], _("Stop"))
 
@@ -224,7 +224,7 @@ class Stop (MediaPlayerCommandLeaf):
         player.player.Stop()
 
 
-class Pause (MediaPlayerCommandLeaf):
+class PauseLeaf (MediaPlayerCommandLeaf):
     def __init__(self):
         Leaf.__init__(self, [], _("Pause"))
 
@@ -238,7 +238,7 @@ class Pause (MediaPlayerCommandLeaf):
         player.player.Pause()
 
 
-class Next (MediaPlayerCommandLeaf):
+class NextLeaf (MediaPlayerCommandLeaf):
     '''skip to next track in media player'''
     def __init__(self):
         Leaf.__init__(self, [], _("Next"))
@@ -253,7 +253,7 @@ class Next (MediaPlayerCommandLeaf):
         player.player.Next()
 
 
-class Previous (MediaPlayerCommandLeaf):
+class PreviousLeaf (MediaPlayerCommandLeaf):
     def __init__(self):
         Leaf.__init__(self, [], _("Previous"))
 
@@ -267,7 +267,7 @@ class Previous (MediaPlayerCommandLeaf):
         player.player.Previous()
 
 
-class Quit (MediaPlayerCommandLeaf):
+class QuitLeaf (MediaPlayerCommandLeaf):
     def __init__(self):
         Leaf.__init__(self, [], _("Quit"))
 
@@ -281,7 +281,7 @@ class Quit (MediaPlayerCommandLeaf):
         player.root.Quit()
 
 
-class ShowPlaying (MediaPlayerCommandLeaf):
+class ShowPlayingLeaf (MediaPlayerCommandLeaf):
     notification_id = 0
 
     def __init__(self):
@@ -309,7 +309,7 @@ class ShowPlaying (MediaPlayerCommandLeaf):
                                                                     ShowPlaying.notification_id)
 
 
-class Raise (MediaPlayerCommandLeaf):
+class RaiseLeaf (MediaPlayerCommandLeaf):
     def __init__(self):
         Leaf.__init__(self, [], _("Raise player"))
 
@@ -339,14 +339,14 @@ class MediaPlayerCommandsSource (Source):
         yield MediaPlayerCommandLeaf
 
     def get_items(self):
-        yield Raise()
-        yield PlayPause()
-        yield Play()
-        yield Pause()
-        yield Stop()
-        yield Next()
-        yield Previous()
-        yield ShowPlaying()
-        yield Quit()
+        yield RaiseLeaf()
+        yield PlayPauseLeaf()
+        yield PlayLeaf()
+        yield PauseLeaf()
+        yield StopLeaf()
+        yield NextLeaf()
+        yield PreviousLeaf()
+        yield ShowPlayingLeaf()
+        yield QuitLeaf()
 
 # vim: fdm=marker
