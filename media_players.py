@@ -313,7 +313,7 @@ class PreviousLeaf (MediaPlayerCommandLeaf):
 
 class QuitLeaf (MediaPlayerCommandLeaf):
     def __init__(self):
-        Leaf.__init__(self, [], _("Quit"))
+        Leaf.__init__(self, [], _("Quit player"))
 
     def get_icon_name(self):
         return "application-exit"
@@ -391,6 +391,5 @@ class MediaPlayerCommandsSource (Source):
         yield NextLeaf()
         yield PreviousLeaf()
         yield ShowPlayingLeaf()
-        yield QuitLeaf()
 
 # vim: fdm=marker
