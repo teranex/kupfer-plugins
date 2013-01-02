@@ -133,6 +133,10 @@ class RunningMediaPlayerTarget (Action):
 
 
 class MediaPlayerAction (Action):
+    def __init__(self, leaf):
+        self.leaf = leaf
+        super(MediaPlayerAction, self).__init__(leaf.name)
+
     def item_types(self):
         yield AppLeaf
 
@@ -163,8 +167,7 @@ class MediaPlayerAction (Action):
 
 class PlayPause (MediaPlayerAction):
     def __init__(self):
-        self.leaf = PlayPauseLeaf()
-        super(PlayPause, self).__init__(self.leaf.name)
+        super(PlayPause, self).__init__(PlayPauseLeaf())
 
 
 # {{{ Leafs
