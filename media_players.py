@@ -1,6 +1,7 @@
 __kupfer_name__ = _("Media Players")
 __kupfer_sources__ = ("MediaPlayerCommandsSource", )
-__kupfer_actions__ = ("PlayPause", )
+__kupfer_actions__ = ("PlayPause", "Play", "Pause", "Stop", "Next",
+                      "Previous", "Quit", "ShowPlaying", "Raise",)
 __description__ = _("Control any MPRIS2 media player")
 __version__ = "0.1"
 __author__ = "Jeroen Budts <jeroen@budts.be>"
@@ -170,6 +171,46 @@ class PlayPause (MediaPlayerAction):
         super(PlayPause, self).__init__(PlayPauseLeaf())
 
 
+class Play (MediaPlayerAction):
+    def __init__(self):
+        super(Play, self).__init__(PlayLeaf())
+
+
+class Pause (MediaPlayerAction):
+    def __init__(self):
+        super(Pause, self).__init__(PauseLeaf())
+
+
+class Stop (MediaPlayerAction):
+    def __init__(self):
+        super(Stop, self).__init__(StopLeaf())
+
+
+class Next (MediaPlayerAction):
+    def __init__(self):
+        super(Next, self).__init__(NextLeaf())
+
+
+class Previous (MediaPlayerAction):
+    def __init__(self):
+        super(Previous, self).__init__(PreviousLeaf())
+
+
+class Quit (MediaPlayerAction):
+    def __init__(self):
+        super(Quit, self).__init__(QuitLeaf())
+
+
+class ShowPlaying (MediaPlayerAction):
+    def __init__(self):
+        super(ShowPlaying, self).__init__(ShowPlayingLeaf())
+
+
+class Raise (MediaPlayerAction):
+    def __init__(self):
+        super(Raise, self).__init__(RaiseLeaf())
+
+
 # {{{ Leafs
 class MediaPlayerCommandLeaf (Leaf):
     '''a media player leaf'''
@@ -309,7 +350,7 @@ class ShowPlayingLeaf (MediaPlayerCommandLeaf):
             ShowPlaying.notification_id = uiutils.show_notification(title,
                                                                     format_metadata(meta).replace('&', '&amp;'),
                                                                     icon,
-                                                                    ShowPlaying.notification_id)
+                                                                    ShowPlayingLeaf.notification_id)
 
 
 class RaiseLeaf (MediaPlayerCommandLeaf):
