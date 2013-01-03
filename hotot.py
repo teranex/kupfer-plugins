@@ -63,7 +63,7 @@ class HototAction (Action):
         yield AppLeaf
 
     def valid_for_item(self, item):
-        return item.name == 'Hotot' and get_hotot() != None
+        return item.get_id() == 'hotot' and get_hotot() != None
 
 class Show (HototAction):
     def __init__(self):
