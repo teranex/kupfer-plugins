@@ -1,7 +1,8 @@
 __kupfer_name__ = _("Media Players")
 __kupfer_sources__ = ("MediaPlayerCommandsSource", )
 __kupfer_actions__ = ("PlayPause", "Play", "Pause", "Stop", "Next",
-                      "Previous", "Quit", "ShowPlaying", "Raise",)
+                      "Previous", "Quit", "ShowPlaying", "Raise", "Open",
+                      "Seek", )
 __description__ = _("Control any MPRIS2 media player")
 __version__ = "0.1"
 __author__ = "Jeroen Budts <jeroen@budts.be>"
@@ -9,7 +10,7 @@ __author__ = "Jeroen Budts <jeroen@budts.be>"
 import dbus
 
 from kupfer import pretty, plugin_support, icons, uiutils
-from kupfer.objects import Source, Leaf, Action, AppLeaf
+from kupfer.objects import Source, Leaf, Action, AppLeaf, FileLeaf
 from kupfer.obj.base import ActionGenerator
 from kupfer.weaklib import dbus_signal_connect_weakly
 from gio.unix import DesktopAppInfo
@@ -65,7 +66,7 @@ class MediaPlayersRegistry (object):
                                    dbus_interface='org.freedesktop.DBus')
 
     def _signal_update(self, *args):
-        if (len(args) > 0 and args[0].startswith('org.mpris.MediaPlayer2.')):
+        if len(args) > 0 and args[0].startswith('org.mpris.MediaPlayer2.'):
             self.reindex()
 
     def reindex(self):
@@ -150,9 +151,6 @@ class MediaPlayerAction (Action):
         player = media_players_registry.get_player(leaf.get_id())
         self.run_action(player)
 
-    def run_action(self, player):
-        raise NotImplementedError('Subclasses should implement this method')
-
     def get_description(self):
         return self.leaf.get_description()
 
@@ -209,6 +207,36 @@ class ShowPlaying (MediaPlayerAction):
 class Raise (MediaPlayerAction):
     def __init__(self):
         super(Raise, self).__init__(RaiseLeaf())
+
+
+class Seek (Action):
+    def __init__(self):
+        Action.__init__(self, _("Seek"))
+
+    def get_icon_name(self):
+        return "media-seek-forward"
+
+    def item_types(self):
+        yield AppLeaf
+
+    def valid_for_item(self, leaf):
+        return media_players_registry.has_player(leaf.get_id())
+
+    def get_description(self):
+        return "Seek the currently playing track"
+
+    def requires_object(self):
+        return True
+
+    def object_types(self):
+        yield SeekTimeLeaf
+
+    def object_source(self, for_item):
+        return SeekTimesSource()
+
+    def activate(self, leaf, iobj):
+        player = media_players_registry.get_player(leaf.get_id())
+        player.player.Seek(iobj.object * 1000000)
 
 
 # {{{ Leafs
@@ -343,7 +371,7 @@ class ShowPlayingLeaf (MediaPlayerCommandLeaf):
     def run_on_player(self, player):
         # TODO: more error checking (for example when no track is selected in Banshee)
         meta = player.get_player_property('Metadata')
-        if (len(meta) > 0):
+        if len(meta) > 0:
             pretty.print_debug(__name__, meta)
             title = meta.get('xesam:title', _('unknown'))
             icon = meta.get('mpris:artUrl', 'applications-multimedia')
@@ -365,6 +393,16 @@ class RaiseLeaf (MediaPlayerCommandLeaf):
 
     def run_on_player(self, player):
         player.root.Raise()
+
+
+class SeekTimeLeaf (Leaf):
+    '''A leaf to be selected as indirect object, providing the number of seconds to seek'''
+    def __init__(self, time):
+        name = "%d seconds %s" % (abs(time), ('forward' if time > 0 else 'backward'))
+        Leaf.__init__(self, time, name)
+
+    def get_icon_name(self):
+        return "gnome-set-time"
 # }}}
 
 
@@ -391,5 +429,24 @@ class MediaPlayerCommandsSource (Source):
         yield NextLeaf()
         yield PreviousLeaf()
         yield ShowPlayingLeaf()
+
+
+class SeekTimesSource (Source):
+    TIMES = (-60, -30, -10, -5, 5, 10, 30, 60)
+
+    def __init__(self):
+        Source.__init__(self, _("Seek times"))
+
+    def get_description(self):
+        return _("Number of seconds to seek in the media player")
+
+    def get_icon_name(self):
+        return "multimedia-player"
+
+    def provides(self):
+        yield SeekTimeLeaf
+
+    def get_items(self):
+        return [SeekTimeLeaf(time) for time in SeekTimesSource.TIMES]
 
 # vim: fdm=marker
