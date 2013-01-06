@@ -2,7 +2,7 @@ __kupfer_name__ = _("Media Players")
 __kupfer_sources__ = ("MediaPlayerCommandsSource", )
 __kupfer_actions__ = ("PlayPause", "Play", "Pause", "Stop", "Next",
                       "Previous", "Quit", "ShowPlaying", "Raise", "Open",
-                      "Seek", )
+                      "Seek", "ActivatePlaylist")
 __description__ = _("Control any MPRIS2 media player")
 __version__ = "0.1"
 __author__ = "Jeroen Budts <jeroen@budts.be>"
@@ -14,6 +14,7 @@ from kupfer.objects import Source, Leaf, Action, AppLeaf, FileLeaf
 from kupfer.obj.base import ActionGenerator
 from kupfer.weaklib import dbus_signal_connect_weakly
 from gio.unix import DesktopAppInfo
+from gio import FileIcon, File
 
 plugin_support.check_dbus_connection()
 
@@ -34,6 +35,18 @@ class MediaPlayer (object):
         return dbus.Interface(self._dbus_obj, dbus_interface='org.mpris.MediaPlayer2.Player')
 
     @property
+    def playlists(self):
+        return dbus.Interface(self._dbus_obj, dbus_interface='org.mpris.MediaPlayer2.Playlists')
+
+    @property
+    def supports_playlists(self):
+        try:
+            self.get_playlists_property('PlaylistCount')
+            return True
+        except:
+            return False
+
+    @property
     def name(self):
         return self.get_root_property('DesktopEntry')
 
@@ -46,6 +59,9 @@ class MediaPlayer (object):
 
     def get_root_property(self, property_name):
         return self._get_property('org.mpris.MediaPlayer2', property_name)
+
+    def get_playlists_property(self, property_name):
+        return self._get_property('org.mpris.MediaPlayer2.Playlists', property_name)
 
     @property
     def icon(self):
@@ -239,6 +255,40 @@ class Seek (Action):
         player.player.Seek(iobj.object * 1000000)
 
 
+class ActivatePlaylist (Action):
+    def __init__(self):
+        Action.__init__(self, _("Activate playlist"))
+
+    def get_icon_name(self):
+        return "audio-x-playlist"
+
+    def item_types(self):
+        yield AppLeaf
+
+    def valid_for_item(self, leaf):
+        if media_players_registry.has_player(leaf.get_id()):
+            player = media_players_registry.get_player(leaf.get_id())
+            return player.supports_playlists
+        return False
+
+    def get_description(self):
+        return "Switch to another playlist"
+
+    def requires_object(self):
+        return True
+
+    def object_types(self):
+        yield PlaylistLeaf
+
+    def object_source(self, for_item):
+        return PlaylistSource(for_item.get_id())
+
+    def activate(self, leaf, iobj):
+        pretty.print_debug(__name__, "activating playlist")
+        player = media_players_registry.get_player(leaf.get_id())
+        player.playlists.ActivatePlaylist(iobj.object)
+
+
 # {{{ Leafs
 class MediaPlayerCommandLeaf (Leaf):
     '''a media player leaf'''
@@ -403,6 +453,15 @@ class SeekTimeLeaf (Leaf):
 
     def get_icon_name(self):
         return "gnome-set-time"
+
+class PlaylistLeaf (Leaf):
+    '''A leaf to represent a playlist'''
+    def __init__(self, playlist_id, playlist_name, icon):
+        Leaf.__init__(self, playlist_id, playlist_name)
+        self.icon = icon
+
+    def get_gicon(self):
+        return FileIcon(File(self.icon))
 # }}}
 
 
@@ -437,16 +496,26 @@ class SeekTimesSource (Source):
     def __init__(self):
         Source.__init__(self, _("Seek times"))
 
-    def get_description(self):
-        return _("Number of seconds to seek in the media player")
-
-    def get_icon_name(self):
-        return "multimedia-player"
-
     def provides(self):
         yield SeekTimeLeaf
 
     def get_items(self):
         return [SeekTimeLeaf(time) for time in SeekTimesSource.TIMES]
+
+
+class PlaylistSource (Source):
+    def __init__(self, player):
+        Source.__init__(self, _("Playlists"))
+        self.player = media_players_registry.get_player(player)
+
+    def provides(self):
+        yield PlaylistLeaf
+
+    def should_sort_lexically(self):
+        return True
+
+    def get_items(self):
+        playlists = self.player.playlists.GetPlaylists(0, 100, 'Alphabetical', False)
+        return [PlaylistLeaf(p[0], p[1], p[2]) for p in playlists]
 
 # vim: fdm=marker
