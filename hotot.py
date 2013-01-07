@@ -11,7 +11,7 @@ __author__ = "Jeroen Budts <jeroen@budts.be>"
 import dbus
 
 from kupfer.objects import Action, TextLeaf, AppLeaf
-from kupfer import pretty, plugin_support
+from kupfer import pretty, plugin_support, launch
 
 plugin_support.check_dbus_connection()
 
@@ -23,6 +23,7 @@ def get_hotot():
     except dbus.exceptions.DBusException, err:
         pretty.print_debug(err)
     return None
+
 
 class SendUpdate (Action):
     ''' Create a Tweet with Hotot '''
@@ -47,6 +48,7 @@ class SendUpdate (Action):
     def valid_for_item(self, item):
         return get_hotot() != None
 
+
 class HototAction (Action):
     def __init__(self, action, func):
         self.action = action
@@ -65,20 +67,33 @@ class HototAction (Action):
     def valid_for_item(self, item):
         return item.get_id() == 'hotot' and get_hotot() != None
 
+
 class Show (HototAction):
     def __init__(self):
         HototAction.__init__(self, 'Show', lambda: get_hotot().show())
+
     def get_icon_name(self):
         return "go-jump"
+
+    def valid_for_item(self, item):
+        return super(Show, self).valid_for_item(item) \
+               and not launch.application_is_running('hotot')
 
 class Hide (HototAction):
     def __init__(self):
         HototAction.__init__(self, 'Hide', lambda: get_hotot().hide())
+
     def get_icon_name(self):
         return "window-close"
+
+    def valid_for_item(self, item):
+        return super(Hide, self).valid_for_item(item) \
+               and launch.application_is_running('hotot')
+
 
 class Quit (HototAction):
     def __init__(self):
         HototAction.__init__(self, 'Quit', lambda: get_hotot().quit())
+
     def get_icon_name(self):
         return "application-exit"
