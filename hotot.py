@@ -3,7 +3,7 @@ A plugin to control Hotot
 """
 
 __kupfer_name__ = _("Hotot")
-__kupfer_actions__ = ("SendUpdate", "Show", "Hide", "Quit", )
+__kupfer_actions__ = ("SendUpdate", "Show", "Quit", )
 __description__ = _("Control Hotot")
 __version__ = "1.0"
 __author__ = "Jeroen Budts <jeroen@budts.be>"
@@ -78,17 +78,6 @@ class Show (HototAction):
     def valid_for_item(self, item):
         return super(Show, self).valid_for_item(item) \
                and not launch.application_is_running('hotot')
-
-class Hide (HototAction):
-    def __init__(self):
-        HototAction.__init__(self, 'Hide', lambda: get_hotot().hide())
-
-    def get_icon_name(self):
-        return "window-close"
-
-    def valid_for_item(self, item):
-        return super(Hide, self).valid_for_item(item) \
-               and launch.application_is_running('hotot')
 
 
 class Quit (HototAction):
