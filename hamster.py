@@ -2,7 +2,7 @@ __kupfer_name__ = _("Hamster")
 __description__ = _("Control the Hamster time tracker")
 __author__ = "Jeroen Budts"
 __kupfer_actions__ = ("Toggle",)
-__kupfer_sources__ = ("HamsterSource",)
+__kupfer_sources__ = ("HamsterSource", "ActivitiesSource")
 
 import dbus
 
@@ -10,6 +10,15 @@ from kupfer.objects import Action, AppLeaf, Source, Leaf, RunnableLeaf, SourceLe
 from kupfer import pretty, plugin_support, icons
 from kupfer.obj.apps import AppLeafContentMixin
 import time
+
+__kupfer_settings__ = plugin_support.PluginSettings(
+    {
+        "key" : "toplevel_activities",
+        "label": _("Include activities in top level"),
+        "type": bool,
+        "value": True,
+    }
+)
 
 # TODO: add to README.md
 
@@ -88,17 +97,44 @@ class StopTrackingLeaf (RunnableLeaf):
 
 
 class ActivityLeaf (Leaf):
+    serializable = None
     def __init__(self, activity):
         Leaf.__init__(self, activity, activity)
 
     def get_actions(self):
-        return (StartActivity(), )
+        yield StartActivity()
 
     def get_icon_name(self):
         return "hamster-indicator"
 
     def get_description(self):
         return self.name
+
+
+class ActivitiesSource (Source):
+    # TODO: option to export activities to toplevel, similar to Rhytmbox
+    def __init__(self):
+        Source.__init__(self, _("Hamster Activities"))
+        self.activities = get_hamster().GetActivities('')
+
+    def provides(self):
+        yield ActivityLeaf
+
+    def get_items(self):
+        for act in self.activities:
+            activity = str(act[0])
+            if act[1]:
+                activity += '@' + str(act[1])
+            yield ActivityLeaf(activity)
+
+    def get_icon_name(self):
+        return "hamster-applet"
+
+    def get_description(self):
+        return _("All known activities in Hamster time tracker")
+
+    def get_actions(self):
+        return ()
 
 
 class HamsterSource (AppLeafContentMixin, Source):
@@ -109,31 +145,12 @@ class HamsterSource (AppLeafContentMixin, Source):
 
     def provides(self):
         yield StopTrackingLeaf
-        yield SourceLeaf
 
     def get_items(self):
         yield StopTrackingLeaf()
-        activities = ActivitiesSource()
-        yield SourceLeaf(activities)
-
-
-class ActivitiesSource (Source):
-    # TODO: option to export activities to toplevel, similar to Rhytmbox
-    def __init__(self):
-        Source.__init__(self, _("Hamster Activities"))
-
-    def provides(self):
-        yield ActivityLeaf
-
-    def get_items(self):
-        for act in get_hamster().GetActivities(''):
-            activity = act[0]
-            if act[1]:
-                activity += '@' + act[1]
-            yield ActivityLeaf(activity)
-
-    def get_icon_name(self):
-        return "hamster-applet"
 
     def get_description(self):
-        return _("All known activities in Hamster time tracker")
+        return _("Hamster time tracker")
+
+    def get_icon_name(self):
+        return "hamster-indicator"
