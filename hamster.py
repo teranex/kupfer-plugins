@@ -11,6 +11,8 @@ from kupfer import pretty, plugin_support, icons
 from kupfer.obj.apps import AppLeafContentMixin
 import time
 
+# TODO: add to README.md
+
 HAMSTER_APPNAMES = ("hamster-indicator", "hamster-time-tracker", )
 
 plugin_support.check_dbus_connection()
@@ -63,6 +65,9 @@ class StartActivity (HamsterAction):
     def get_description(self):
         return _("Start tracking the activity in Hamster")
 
+    def get_icon_name(self):
+        return "media-playback-start"
+
 
 class StopTrackingLeaf (RunnableLeaf):
     #TODO: this only makes sense when an activity is being tracked
@@ -76,7 +81,7 @@ class StopTrackingLeaf (RunnableLeaf):
         return icons.ComposedIconSmall("hamster-applet", self.get_icon_name())
 
     def get_icon_name(self):
-        return "process-stop"
+        return "media-playback-stop"
 
     def run(self):
         get_hamster().StopTracking(time.time() - time.timezone)
@@ -88,6 +93,12 @@ class ActivityLeaf (Leaf):
 
     def get_actions(self):
         return (StartActivity(), )
+
+    def get_icon_name(self):
+        return "hamster-indicator"
+
+    def get_description(self):
+        return self.name
 
 
 class HamsterSource (AppLeafContentMixin, Source):
@@ -109,7 +120,7 @@ class HamsterSource (AppLeafContentMixin, Source):
 class ActivitiesSource (Source):
     # TODO: option to export activities to toplevel, similar to Rhytmbox
     def __init__(self):
-        Source.__init__(self, _("Hamster activities"))
+        Source.__init__(self, _("Hamster Activities"))
 
     def provides(self):
         yield ActivityLeaf
@@ -120,3 +131,9 @@ class ActivitiesSource (Source):
             if act[1]:
                 activity += '@' + act[1]
             yield ActivityLeaf(activity)
+
+    def get_icon_name(self):
+        return "hamster-applet"
+
+    def get_description(self):
+        return _("All known activities in Hamster time tracker")
