@@ -1,8 +1,8 @@
 __kupfer_name__ = _("Hamster")
 __description__ = _("Control the Hamster time tracker")
 __author__ = "Jeroen Budts"
-__kupfer_actions__ = ("Toggle", "StartActivity", "StartActivityWithTags", "Overview",
-                      "Statistics", "Preferences",)
+__kupfer_actions__ = ("Toggle", "StartActivity", "StartActivityWithTags", "StartActivityWithDescription",
+                      "Overview", "Statistics", "Preferences",)
 __kupfer_sources__ = ("HamsterSource", )
 
 import dbus
@@ -147,6 +147,7 @@ class StartActivityWithTags (HamsterAction):
         leaf = leafs[0]
         # XXX: how should spaces be handled?
         tags = ['#' + str(io.object) for io in iobjs]
+        # TODO: test with textleaf as direct object
         get_hamster().AddFact(leaf.object + ', ' + ' '.join(tags), time.time() - time.timezone, 0, False)
 
     def get_description(self):
@@ -167,6 +168,33 @@ class StartActivityWithTags (HamsterAction):
 
     def object_source(self, for_item):
         return TagsSource()
+
+
+class StartActivityWithDescription (HamsterAction):
+    def __init__(self):
+        HamsterAction.__init__(self, _("Start activity with description"))
+
+    def item_types(self):
+        yield TextLeaf
+        yield ActivityLeaf
+
+    def activate(self, leaf, iobj):
+        get_hamster().AddFact(leaf.object + ', ' + iobj.object, time.time() - time.timezone, 0, False)
+
+    def get_description(self):
+        return _("Start tracking the activity with description in Hamster")
+
+    def get_icon_name(self):
+        return "media-playback-start"
+
+    def get_gicon(self):
+        return icons.ComposedIconSmall(self.get_icon_name(), "txt")
+
+    def requires_object(self):
+        return True
+
+    def object_types(self):
+        yield TextLeaf
 
 
 class StopTrackingLeaf (RunnableLeaf):
@@ -194,6 +222,7 @@ class ActivityLeaf (Leaf):
     def get_actions(self):
         yield StartActivity()
         yield StartActivityWithTags()
+        yield StartActivityWithDescription()
 
     def get_icon_name(self):
         return "hamster-indicator"
