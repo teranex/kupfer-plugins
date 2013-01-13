@@ -3,10 +3,11 @@ __description__ = _("Control the Hamster time tracker")
 __author__ = "Jeroen Budts"
 __kupfer_actions__ = ("Toggle",)
 __kupfer_sources__ = ("HamsterSource", "ActivitiesSource")
+__kupfer_actions__ = ("StartActivity", )
 
 import dbus
 
-from kupfer.objects import Action, AppLeaf, Source, Leaf, RunnableLeaf, SourceLeaf
+from kupfer.objects import Action, AppLeaf, Source, Leaf, RunnableLeaf, SourceLeaf, TextLeaf
 from kupfer import pretty, plugin_support, icons
 from kupfer.obj.apps import AppLeafContentMixin
 import time
@@ -65,7 +66,7 @@ class StartActivity (HamsterAction):
         HamsterAction.__init__(self, _("Start activity"))
 
     def item_types(self):
-        #TODO: textleaf
+        yield TextLeaf
         yield ActivityLeaf
 
     def activate(self, leaf):
