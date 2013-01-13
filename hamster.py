@@ -16,7 +16,7 @@ import time
 
 __kupfer_settings__ = plugin_support.PluginSettings(
     {
-        "key" : "toplevel_activities",
+        "key": "toplevel_activities",
         "label": _("Include activities in top level"),
         "type": bool,
         "value": True,
@@ -28,6 +28,7 @@ __kupfer_settings__ = plugin_support.PluginSettings(
 HAMSTER_APPNAMES = ("hamster-indicator", "hamster-time-tracker", )
 
 plugin_support.check_dbus_connection()
+
 
 def get_hamster():
     try:
@@ -51,7 +52,7 @@ class Toggle (HamsterAction):
         yield AppLeaf
 
     def valid_for_item(self, item):
-        return item.get_id() in HAMSTER_APPNAMES and get_hamster() != None
+        return item.get_id() in HAMSTER_APPNAMES and get_hamster() is not None
 
     def activate(self, leaf):
         get_hamster().Toggle()
@@ -72,7 +73,7 @@ class HamsterCmdAction (Action):
         yield AppLeaf
 
     def valid_for_item(self, item):
-        return item.get_id() in HAMSTER_APPNAMES and get_hamster() != None
+        return item.get_id() in HAMSTER_APPNAMES and get_hamster() is not None
 
     def activate(self, leaf):
         try:
@@ -148,10 +149,9 @@ class StartActivityWithTags (HamsterAction):
         # use the first direct object, as it makes no sense to use more than one
         # direct object for this action
         leaf = leafs[0]
-        # XXX: how should spaces be handled?
         tags = ['#' + str(io.object) for io in iobjs]
         fact = leaf.object + ', ' + ' '.join(tags)
-        pretty.print_debug(__name__, "Adding fact: "+fact)
+        pretty.print_debug(__name__, "Adding fact: " + fact)
         get_hamster().AddFact(fact, time.time() - time.timezone, 0, False)
 
     def get_description(self):
