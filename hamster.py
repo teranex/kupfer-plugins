@@ -1,7 +1,8 @@
 __kupfer_name__ = _("Hamster")
 __description__ = _("Control the Hamster time tracker")
 __author__ = "Jeroen Budts"
-__kupfer_actions__ = ("Toggle", "StartActivity", "Overview", "Statistics", "Preferences",)
+__kupfer_actions__ = ("Toggle", "StartActivity", "StartActivityWithTags", "Overview",
+                      "Statistics", "Preferences",)
 __kupfer_sources__ = ("HamsterSource", )
 
 import dbus
@@ -13,8 +14,6 @@ from kupfer.objects import OperationError
 from kupfer import utils
 import time
 
-# dbus.glib.threads_init()
-
 __kupfer_settings__ = plugin_support.PluginSettings(
     {
         "key" : "toplevel_activities",
@@ -24,7 +23,7 @@ __kupfer_settings__ = plugin_support.PluginSettings(
     }
 )
 
-# TODO: add to README.md
+# TODO: add to README.md (XXX: describe patch needed)
 
 HAMSTER_APPNAMES = ("hamster-indicator", "hamster-time-tracker", )
 
@@ -134,6 +133,42 @@ class StartActivity (HamsterAction):
         return "media-playback-start"
 
 
+class StartActivityWithTags (HamsterAction):
+    def __init__(self):
+        HamsterAction.__init__(self, _("Start activity with tags"))
+
+    def item_types(self):
+        yield TextLeaf
+        yield ActivityLeaf
+
+    def activate_multiple(self, leafs, iobjs):
+        # use the first direct object, as it makes no sense to use more than one
+        # direct object for this action
+        leaf = leafs[0]
+        # XXX: how should spaces be handled?
+        tags = ['#' + str(io.object) for io in iobjs]
+        get_hamster().AddFact(leaf.object + ', ' + ' '.join(tags), time.time() - time.timezone, 0, False)
+
+    def get_description(self):
+        return _("Start tracking the activity with tags in Hamster")
+
+    def get_icon_name(self):
+        return "media-playback-start"
+
+    def get_gicon(self):
+        return icons.ComposedIconSmall(self.get_icon_name(), "tag-new")
+
+    def requires_object(self):
+        return True
+
+    def object_types(self):
+        yield TagLeaf
+        yield TextLeaf
+
+    def object_source(self, for_item):
+        return TagsSource()
+
+
 class StopTrackingLeaf (RunnableLeaf):
     #TODO: this only makes sense when an activity is being tracked
     def __init__(self):
@@ -153,12 +188,12 @@ class StopTrackingLeaf (RunnableLeaf):
 
 
 class ActivityLeaf (Leaf):
-    serializable = None
     def __init__(self, activity):
         Leaf.__init__(self, activity, activity)
 
     def get_actions(self):
         yield StartActivity()
+        yield StartActivityWithTags()
 
     def get_icon_name(self):
         return "hamster-indicator"
@@ -167,8 +202,15 @@ class ActivityLeaf (Leaf):
         return self.name
 
 
+class TagLeaf (Leaf):
+    def __init__(self, tag_name):
+        Leaf.__init__(self, tag_name, tag_name)
+
+    def get_icon_name(self):
+        return "tag-new"
+
+
 class ActivitiesSource (Source):
-    # TODO: option to export activities to toplevel, similar to Rhytmbox
     def __init__(self):
         Source.__init__(self, _("Hamster Activities"))
         self.activities = get_hamster().GetActivities('')
@@ -191,6 +233,17 @@ class ActivitiesSource (Source):
 
     def get_actions(self):
         return ()
+
+
+class TagsSource (Source):
+    def __init__(self):
+        Source.__init__(self, _("Hamster Tags"))
+
+    def provides(self):
+        yield TagLeaf
+
+    def get_items(self):
+        return [TagLeaf(t[1]) for t in get_hamster().GetTags(True)]
 
 
 class HamsterSource (AppLeafContentMixin, Source):
