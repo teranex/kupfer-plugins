@@ -2,7 +2,7 @@ __kupfer_name__ = _("Hamster")
 __description__ = _("Control the Hamster time tracker")
 __author__ = "Jeroen Budts"
 __kupfer_actions__ = ("Toggle", "StartActivity", "Overview", "Statistics", "Preferences",)
-__kupfer_sources__ = ("HamsterSource", "ActivitiesSource")
+__kupfer_sources__ = ("HamsterSource", )
 
 import dbus
 
@@ -12,6 +12,17 @@ from kupfer.obj.apps import AppLeafContentMixin
 from kupfer.objects import OperationError
 from kupfer import utils
 import time
+
+# dbus.glib.threads_init()
+
+__kupfer_settings__ = plugin_support.PluginSettings(
+    {
+        "key" : "toplevel_activities",
+        "label": _("Include activities in top level"),
+        "type": bool,
+        "value": True,
+    }
+)
 
 # TODO: add to README.md
 
@@ -190,9 +201,16 @@ class HamsterSource (AppLeafContentMixin, Source):
 
     def provides(self):
         yield StopTrackingLeaf
+        yield SourceLeaf
+        yield ActivityLeaf
 
     def get_items(self):
         yield StopTrackingLeaf()
+        activities_source = ActivitiesSource()
+        yield SourceLeaf(activities_source)
+        if __kupfer_settings__["toplevel_activities"]:
+            for leaf in activities_source.get_leaves():
+                yield leaf
 
     def get_description(self):
         return _("Hamster time tracker")
