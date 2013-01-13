@@ -1,25 +1,17 @@
 __kupfer_name__ = _("Hamster")
 __description__ = _("Control the Hamster time tracker")
 __author__ = "Jeroen Budts"
-__kupfer_actions__ = ("Toggle",)
+__kupfer_actions__ = ("Toggle", "StartActivity", "Overview", "Statistics", "Preferences",)
 __kupfer_sources__ = ("HamsterSource", "ActivitiesSource")
-__kupfer_actions__ = ("StartActivity", )
 
 import dbus
 
 from kupfer.objects import Action, AppLeaf, Source, Leaf, RunnableLeaf, SourceLeaf, TextLeaf
 from kupfer import pretty, plugin_support, icons
 from kupfer.obj.apps import AppLeafContentMixin
+from kupfer.objects import OperationError
+from kupfer import utils
 import time
-
-__kupfer_settings__ = plugin_support.PluginSettings(
-    {
-        "key" : "toplevel_activities",
-        "label": _("Include activities in top level"),
-        "type": bool,
-        "value": True,
-    }
-)
 
 # TODO: add to README.md
 
@@ -59,6 +51,58 @@ class Toggle (HamsterAction):
 
     def get_icon_name(self):
         return 'go-jump'
+
+
+class HamsterCmdAction (Action):
+    def __init__(self, cmd, name):
+        Action.__init__(self, name)
+        self.cmd = cmd
+
+    def item_types(self):
+        yield AppLeaf
+
+    def valid_for_item(self, item):
+        return item.get_id() in HAMSTER_APPNAMES and get_hamster() != None
+
+    def activate(self, leaf):
+        try:
+            args = ['hamster-time-tracker', self.cmd]
+            utils.spawn_async_raise(args)
+        except utils.SpawnError as exc:
+            raise OperationError(exc)
+
+
+class Overview (HamsterCmdAction):
+    def __init__(self):
+        HamsterCmdAction.__init__(self, 'overview', _("Show Overview"))
+
+    def get_description(self):
+        return _("Open the overview window of Hamster")
+
+    def get_icon_name(self):
+        return "applications-versioncontrol"
+
+
+class Statistics (HamsterCmdAction):
+    def __init__(self):
+        HamsterCmdAction.__init__(self, 'statistics', _("Show Statistics"))
+
+    def get_description(self):
+        return _("Show the Hamster statistics window")
+
+    def get_icon_name(self):
+        return "emblem-sales"
+
+
+class Preferences (HamsterCmdAction):
+    def __init__(self):
+        HamsterCmdAction.__init__(self, 'preferences', _("Show Preferences"))
+
+    def get_description(self):
+        return _("Show the Hamster preferences window")
+
+    def get_icon_name(self):
+        return "emblem-system"
 
 
 class StartActivity (HamsterAction):
