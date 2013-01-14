@@ -1,12 +1,8 @@
-"""
-A plugin to control Hotot
-"""
-
 __kupfer_name__ = _("Hotot")
 __kupfer_actions__ = ("SendUpdate", "Show", "Quit", )
 __description__ = _("Control Hotot")
-__version__ = "1.0"
-__author__ = "Jeroen Budts <jeroen@budts.be>"
+__version__ = ""
+__author__ = "Jeroen Budts"
 
 import dbus
 

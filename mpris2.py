@@ -9,8 +9,8 @@ Initially based on the Spotify plugin
 __kupfer_name__ = _("MPRIS2 (DEPRECATED)")
 __kupfer_sources__ = ("Mpris2Source", )
 __description__ = _("(This plugin is deprecated. Use the media_players plugin instead)\nControl the active MPRIS2 player")
-__version__ = "0.1"
-__author__ = "Jeroen Budts <jeroen@budts.be>"
+__version__ = ""
+__author__ = "Jeroen Budts"
 
 import dbus
 

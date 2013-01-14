@@ -4,8 +4,8 @@ __kupfer_actions__ = ("PlayPause", "Play", "Pause", "Stop", "Next",
                       "Previous", "Quit", "ShowPlaying", "Raise", "Open",
                       "Seek", "ActivatePlaylist")
 __description__ = _("Control any MPRIS2 media player")
-__version__ = "0.1"
-__author__ = "Jeroen Budts <jeroen@budts.be>"
+__version__ = ""
+__author__ = "Jeroen Budts"
 
 import dbus
 
