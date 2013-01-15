@@ -8,7 +8,7 @@ __kupfer_sources__ = ("HamsterSource", )
 import dbus
 
 from kupfer.objects import Action, AppLeaf, Source, Leaf, RunnableLeaf, SourceLeaf, TextLeaf
-from kupfer import pretty, plugin_support, icons
+from kupfer import pretty, plugin_support, icons, uiutils
 from kupfer.obj.apps import AppLeafContentMixin
 from kupfer.objects import OperationError
 from kupfer import utils
@@ -38,6 +38,12 @@ def get_hamster():
     except dbus.exceptions.DBusException, err:
         pretty.print_debug(err)
     return None
+
+
+def format_time(seconds):
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return '%d:%02d:%02d' % (hours, minutes, seconds)
 
 
 class HamsterAction (Action):
@@ -202,7 +208,7 @@ class StartActivityWithTagsAndDescription (HamsterAction):
                 break
 
         fact = leaf.object + ', ' + description + ' ' + ' '.join(tags)
-        pretty.print_debug(__name__, "Adding fact: "+fact)
+        pretty.print_debug(__name__, "Adding fact: " + fact)
         get_hamster().AddFact(fact, time.time() - time.timezone, 0, False)
 
     def get_description(self):
@@ -272,6 +278,8 @@ class StopTrackingLeaf (RunnableLeaf):
 
 
 class ShowHamsterInfo (RunnableLeaf):
+    notification_id = 0
+
     def __init__(self):
         RunnableLeaf.__init__(self, name=_("Show Hamster Info"))
 
@@ -292,6 +300,12 @@ class ShowHamsterInfo (RunnableLeaf):
                 end = time.time() - time.timezone
             duration = end - f[1]
             total += duration
+        notification_body = "Total time today: %s" % format_time(total)
+        if current:
+            notification_body += "\nCurrent: %s@%s (%s)" % (current[4], current[6],
+                                                            format_time(time.time() - time.timezone - current[1]))
+        ShowHamsterInfo.notification_id = uiutils.show_notification('Hamster Info',
+                                          notification_body, 'hamster-indicator', ShowHamsterInfo.notification_id)
 
 
 class ActivityLeaf (Leaf):
