@@ -195,6 +195,7 @@ class StartActivityWithTagsAndDescription (HamsterAction):
 
         # find description
         description = ''
+        # check for correct Python function
         for io in iobjs:
             if isinstance(io, TextLeaf):
                 description = io.object
@@ -270,6 +271,29 @@ class StopTrackingLeaf (RunnableLeaf):
         get_hamster().StopTracking(time.time() - time.timezone)
 
 
+class ShowHamsterInfo (RunnableLeaf):
+    def __init__(self):
+        RunnableLeaf.__init__(self, name=_("Show Hamster Info"))
+
+    def get_description(self):
+        return _("Show hamster information for today")
+
+    def get_icon_name(self):
+        return "info"
+
+    def run(self):
+        facts = get_hamster().GetTodaysFacts()
+        total = 0
+        current = None
+        for f in facts:
+            end = f[2]
+            if end == 0:
+                current = f
+                end = time.time() - time.timezone
+            duration = end - f[1]
+            total += duration
+
+
 class ActivityLeaf (Leaf):
     def __init__(self, activity):
         Leaf.__init__(self, activity, activity)
@@ -338,11 +362,13 @@ class HamsterSource (AppLeafContentMixin, Source):
 
     def provides(self):
         yield StopTrackingLeaf
+        yield ShowHamsterInfo
         yield SourceLeaf
         yield ActivityLeaf
 
     def get_items(self):
         yield StopTrackingLeaf()
+        yield ShowHamsterInfo()
         activities_source = ActivitiesSource()
         yield SourceLeaf(activities_source)
         if __kupfer_settings__["toplevel_activities"]:
