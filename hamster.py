@@ -2,7 +2,7 @@ __kupfer_name__ = _("Hamster")
 __description__ = _("Control the Hamster time tracker")
 __author__ = "Jeroen Budts"
 __kupfer_actions__ = ("Toggle", "StartActivity", "StartActivityWithTags", "StartActivityWithDescription",
-                      "Overview", "Statistics", "Preferences",)
+                      "StartActivityWithTagsAndDescription", "Overview", "Statistics", "Preferences",)
 __kupfer_sources__ = ("HamsterSource", )
 
 import dbus
@@ -162,6 +162,57 @@ class StartActivityWithTags (HamsterAction):
 
     def get_gicon(self):
         return icons.ComposedIconSmall(self.get_icon_name(), "tag-new")
+
+    def requires_object(self):
+        return True
+
+    def object_types(self):
+        yield TagLeaf
+        yield TextLeaf
+
+    def object_source(self, for_item):
+        return TagsSource()
+
+
+class StartActivityWithTagsAndDescription (HamsterAction):
+    def __init__(self):
+        HamsterAction.__init__(self, _("Start activity with tags and description"))
+
+    def item_types(self):
+        yield TextLeaf
+        yield ActivityLeaf
+
+    def activate(self, leaf, iobj):
+        self.activate_multiple([leaf], [iobj])
+
+    def activate_multiple(self, leafs, iobjs):
+        # use the first direct object, as it makes no sense to use more than one
+        # direct object for this action
+        leaf = leafs[0]
+
+        # find tags
+        tags = ['#' + str(io.object) for io in iobjs if isinstance(io, TagLeaf)]
+
+        # find description
+        description = ''
+        for io in iobjs:
+            if isinstance(io, TextLeaf):
+                description = io.object
+                break
+
+        fact = leaf.object + ', ' + description + ' ' + ' '.join(tags)
+        pretty.print_debug(__name__, "Adding fact: "+fact)
+        get_hamster().AddFact(fact, time.time() - time.timezone, 0, False)
+
+    def get_description(self):
+        return _("Start tracking the activity with tags and a description in Hamster")
+
+    def get_icon_name(self):
+        return "media-playback-start"
+
+    def get_gicon(self):
+        icon = icons.ComposedIconSmall(self.get_icon_name(), "txt")
+        return icons.ComposedIconSmall(icon, 'tag-new')
 
     def requires_object(self):
         return True
