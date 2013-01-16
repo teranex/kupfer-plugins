@@ -11,6 +11,7 @@ from kupfer.objects import Action, AppLeaf, Source, Leaf, RunnableLeaf, SourceLe
 from kupfer import pretty, plugin_support, icons, uiutils
 from kupfer.obj.apps import AppLeafContentMixin
 from kupfer.objects import OperationError
+from kupfer.weaklib import dbus_signal_connect_weakly
 from kupfer import utils
 import time
 
@@ -376,6 +377,14 @@ class HamsterSource (AppLeafContentMixin, Source):
 
     def __init__(self):
         Source.__init__(self, _("Hamster"))
+
+    def _facts_changed(self, *args):
+        pretty.print_debug(__name__, 'facts changed')
+        self.mark_for_update()
+
+    def initialize(self):
+        dbus_signal_connect_weakly(dbus.Bus(), 'FactsChanged', self._facts_changed,
+                                   dbus_interface='org.gnome.Hamster')
 
     def provides(self):
         yield StopTrackingLeaf
