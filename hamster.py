@@ -43,7 +43,10 @@ def get_hamster():
 def format_time(seconds):
     hours, remainder = divmod(seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
-    return '%d:%02d:%02d' % (hours, minutes, seconds)
+    timestr = '%dmin' % minutes
+    if hours > 0:
+        timestr = ('%dh ' % hours) + timestr
+    return timestr
 
 
 class HamsterAction (Action):
