@@ -25,6 +25,7 @@ __kupfer_settings__ = plugin_support.PluginSettings(
 )
 
 # TODO: add to README.md (XXX: describe patch needed)
+# TODO: timezones + daylight savings time correct?
 
 HAMSTER_APPNAMES = ("hamster-indicator", "hamster-time-tracker", )
 
@@ -50,7 +51,23 @@ def format_time(seconds):
     return timestr
 
 
+def format_fact_string(activity, category=None, description=None, tags=None):
+    # TODO: use whenever possible
+    fact = activity
+    if category:
+        fact += "@" + category
+    if description or tags:
+        fact += ','
+    if description:
+        fact += description
+    if tags:
+        tags = ['#' + str(t) for t in tags]
+        fact += ' ' + ' '.join(tags)
+    return fact
+
+
 class HamsterAction (Action):
+    # TODO: remove
     pass
 
 
@@ -263,6 +280,74 @@ class StartActivityWithDescription (HamsterAction):
         yield TextLeaf
 
 
+# TODO: bug: when launching the same action again it duplicates the action
+#            probably the ID was updated or something
+class ChangeStartTime (HamsterAction):
+    def __init__(self):
+        HamsterAction.__init__(self, _("Change start time"))
+
+    def item_types(self):
+        yield FactLeaf
+
+    def get_description(self):
+        return _("Change the start time (format: hh:mm) of a Hamster activty")
+
+    def activate(self, leaf, iobj):
+        fact = format_fact_string(leaf.activity, leaf.category, leaf.description, leaf.tags)
+        parsed = time.strptime(iobj.object, "%H:%M")
+        now = time.localtime()
+        result = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday, parsed.tm_hour, parsed.tm_min,
+                                  0, now.tm_wday, now.tm_yday, now.tm_isdst))
+        starttime = time.mktime(result) - time.timezone
+        pretty.print_debug(__name__, fact)
+        get_hamster().UpdateFact(leaf.id, fact, starttime, leaf.endtime, False)
+
+    def requires_object(self):
+        return True
+
+    def object_types(self):
+        yield TextLeaf
+
+    def get_icon_name(self):
+        return "gtk-edit"
+
+    def get_gicon(self):
+        return icons.ComposedIconSmall(self.get_icon_name(), "media-playback-start")
+
+
+class ChangeEndTime (HamsterAction):
+    def __init__(self):
+        HamsterAction.__init__(self, _("Change end time"))
+
+    def item_types(self):
+        yield FactLeaf
+
+    def get_description(self):
+        return _("Change the end time (format: hh:mm) of a Hamster activty")
+
+    def activate(self, leaf, iobj):
+        fact = format_fact_string(leaf.activity, leaf.category, leaf.description, leaf.tags)
+        parsed = time.strptime(iobj.object, "%H:%M")
+        now = time.localtime()
+        result = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday, parsed.tm_hour, parsed.tm_min,
+                                  0, now.tm_wday, now.tm_yday, now.tm_isdst))
+        endtime = time.mktime(result) - time.timezone
+        pretty.print_debug(__name__, fact)
+        get_hamster().UpdateFact(leaf.id, fact, leaf.starttime, endtime, False)
+
+    def requires_object(self):
+        return True
+
+    def object_types(self):
+        yield TextLeaf
+
+    def get_icon_name(self):
+        return "gtk-edit"
+
+    def get_gicon(self):
+        return icons.ComposedIconSmall(self.get_icon_name(), "media-playback-stop")
+
+
 class StopTrackingLeaf (RunnableLeaf):
     #TODO: this only makes sense when an activity is being tracked
     def __init__(self):
@@ -336,6 +421,29 @@ class TagLeaf (Leaf):
         return "tag-new"
 
 
+class FactLeaf (Leaf):
+    def __init__(self, id, activity, category):
+        name = activity
+        if category:
+            name += "@" + category
+        Leaf.__init__(self, id, name)
+        self.id = id
+        self.activity = activity
+        self.category = category
+
+    def get_icon_name(self):
+        return "hamster-indicator"
+
+    def get_actions(self):
+        # TODO:
+        yield ChangeStartTime()
+        yield ChangeEndTime()
+        # ChangeTags
+        # ChangeDescription
+        # StopTracking?
+        pass
+
+
 class ActivitiesSource (Source):
     def __init__(self):
         Source.__init__(self, _("Hamster Activities"))
@@ -372,6 +480,36 @@ class TagsSource (Source):
         return [TagLeaf(t[1]) for t in get_hamster().GetTags(True)]
 
 
+class FactsSource (Source):
+    # TODO: make sure the same fact with different start and endtimes is not
+    # filtered out (=seen as duplicate), it should be available twice in that
+    # case, with different start/end times
+    def __init__(self):
+        Source.__init__(self, _("Hamster Facts"))
+
+    def get_description(self):
+        return _("Facts for today")
+
+    def get_icon_name(self):
+        return "hamster-applet"
+
+    def provides(self):
+        yield FactLeaf
+
+    def get_actions(self):
+        return ()
+
+    def get_items(self):
+        facts = get_hamster().GetTodaysFacts()
+        for f in facts:
+            leaf = FactLeaf(f[0], f[4], f[6])
+            leaf.starttime = f[1]
+            leaf.endtime = f[2]
+            leaf.description = f[3]
+            leaf.tags = f[7]
+            yield leaf
+
+
 class HamsterSource (AppLeafContentMixin, Source):
     appleaf_content_id = HAMSTER_APPNAMES
 
@@ -397,6 +535,8 @@ class HamsterSource (AppLeafContentMixin, Source):
         yield ShowHamsterInfo()
         activities_source = ActivitiesSource()
         yield SourceLeaf(activities_source)
+        facts_source = FactsSource()
+        yield SourceLeaf(facts_source)
         if __kupfer_settings__["toplevel_activities"]:
             for leaf in activities_source.get_leaves():
                 yield leaf
