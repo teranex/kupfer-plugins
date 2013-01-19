@@ -337,6 +337,21 @@ class ChangeEndTime (FactEditAction):
         return icons.ComposedIconSmall(self.get_icon_name(), "media-playback-stop")
 
 
+class ChangeDescription (FactEditAction):
+    def __init__(self):
+        Action.__init__(self, _("Change the description"))
+
+    def get_description(self):
+        return _("Change the description of a Hamster activity")
+
+    def get_gicon(self):
+        return icons.ComposedIconSmall(self.get_icon_name(), "txt")
+
+    def activate(self, leaf, iobj):
+        leaf.description = iobj.object
+        return self.update_fact(leaf)
+
+
 class StopTrackingLeaf (RunnableLeaf):
     #TODO: this only makes sense when an activity is being tracked
     def __init__(self):
@@ -432,9 +447,9 @@ class FactLeaf (Leaf):
         # TODO:
         yield ChangeStartTime()
         yield ChangeEndTime()
+        yield ChangeDescription()
         # ChangeTags
-        # ChangeDescription
-        # StopTracking?
+        # Remove
         pass
 
 
