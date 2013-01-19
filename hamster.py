@@ -352,6 +352,33 @@ class ChangeDescription (FactEditAction):
         return self.update_fact(leaf)
 
 
+class ChangeTags (FactEditAction):
+    def __init__(self):
+        Action.__init__(self, _("Change the tags"))
+
+    def get_description(self):
+        return _("Change the tags of a Hamster activity")
+
+    def get_gicon(self):
+        return icons.ComposedIconSmall(self.get_icon_name(), "tag-new")
+
+    def activate(self, leaf, iobj):
+        return self.activate_multiple([leaf], [iobj])
+
+    def activate_multiple(self, leafs, iobjs):
+        # we only care about the first selected leaf
+        leaf = leafs[0]
+        leaf.tags = [str(io.object) for io in iobjs]
+        return self.update_fact(leaf)
+
+    def object_types(self):
+        yield TagLeaf
+        yield TextLeaf
+
+    def object_source(self, for_item):
+        return TagsSource()
+
+
 class StopTrackingLeaf (RunnableLeaf):
     #TODO: this only makes sense when an activity is being tracked
     def __init__(self):
@@ -448,7 +475,7 @@ class FactLeaf (Leaf):
         yield ChangeStartTime()
         yield ChangeEndTime()
         yield ChangeDescription()
-        # ChangeTags
+        yield ChangeTags()
         # Remove
         pass
 
