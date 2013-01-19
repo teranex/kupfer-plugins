@@ -302,8 +302,8 @@ class FactEditAction (Action):
 
     def update_fact(self, leaf):
         fact = format_fact_string(leaf.activity, leaf.category, leaf.description, leaf.tags)
-        pretty.print_debug(__name__, "Going to update fact %d: %s" % (leaf.id, fact))
-        leaf.id = get_hamster().UpdateFact(leaf.id, fact, leaf.starttime, leaf.endtime, False)
+        pretty.print_debug(__name__, "Going to update fact %d: %s" % (leaf.fact_id, fact))
+        leaf.fact_id = get_hamster().UpdateFact(leaf.fact_id, fact, leaf.starttime, leaf.endtime, False)
         return leaf
 
 
@@ -377,6 +377,23 @@ class ChangeTags (FactEditAction):
 
     def object_source(self, for_item):
         return TagsSource()
+
+
+class Remove (Action):
+    def __init__(self):
+        Action.__init__(self, _("Remove"))
+
+    def get_description(self):
+        return _("Remove the Hamster activity")
+
+    def get_icon_name(self):
+        return "remove"
+
+    def item_types(self):
+        yield FactLeaf
+
+    def activate(self, leaf):
+        get_hamster().RemoveFact(leaf.fact_id)
 
 
 class StopTrackingLeaf (RunnableLeaf):
@@ -453,13 +470,13 @@ class TagLeaf (Leaf):
 
 
 class FactLeaf (Leaf):
-    # TODO directly accept the entire data from dbus
     def __init__(self, fact):
         name = fact[4]
         if fact[6]:
             name += "@" + fact[6]
-        Leaf.__init__(self, id, name)
-        self.id = fact[0]
+        Leaf.__init__(self, fact[0], name)
+        pretty.print_debug(__name__, "creating fact %d: %s" % (fact[0], name))
+        self.fact_id = fact[0]
         self.activity = fact[4]
         self.category = fact[6]
         self.starttime = fact[1]
@@ -471,13 +488,11 @@ class FactLeaf (Leaf):
         return "hamster-indicator"
 
     def get_actions(self):
-        # TODO:
         yield ChangeStartTime()
         yield ChangeEndTime()
         yield ChangeDescription()
         yield ChangeTags()
-        # Remove
-        pass
+        yield Remove()
 
 
 class ActivitiesSource (Source):
