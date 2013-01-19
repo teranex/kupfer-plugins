@@ -66,14 +66,9 @@ def format_fact_string(activity, category=None, description=None, tags=None):
     return fact
 
 
-class HamsterAction (Action):
-    # TODO: remove
-    pass
-
-
-class Toggle (HamsterAction):
+class Toggle (Action):
     def __init__(self):
-        HamsterAction.__init__(self, _("Open / Close"))
+        Action.__init__(self, _("Open / Close"))
 
     def item_types(self):
         yield AppLeaf
@@ -143,9 +138,9 @@ class Preferences (HamsterCmdAction):
         return "emblem-system"
 
 
-class StartActivity (HamsterAction):
+class StartActivity (Action):
     def __init__(self):
-        HamsterAction.__init__(self, _("Start activity"))
+        Action.__init__(self, _("Start activity"))
 
     def item_types(self):
         yield TextLeaf
@@ -161,9 +156,9 @@ class StartActivity (HamsterAction):
         return "media-playback-start"
 
 
-class StartActivityWithTags (HamsterAction):
+class StartActivityWithTags (Action):
     def __init__(self):
-        HamsterAction.__init__(self, _("Start activity with tags"))
+        Action.__init__(self, _("Start activity with tags"))
 
     def item_types(self):
         yield TextLeaf
@@ -201,9 +196,9 @@ class StartActivityWithTags (HamsterAction):
         return TagsSource()
 
 
-class StartActivityWithTagsAndDescription (HamsterAction):
+class StartActivityWithTagsAndDescription (Action):
     def __init__(self):
-        HamsterAction.__init__(self, _("Start activity with tags and description"))
+        Action.__init__(self, _("Start activity with tags and description"))
 
     def item_types(self):
         yield TextLeaf
@@ -253,9 +248,9 @@ class StartActivityWithTagsAndDescription (HamsterAction):
         return TagsSource()
 
 
-class StartActivityWithDescription (HamsterAction):
+class StartActivityWithDescription (Action):
     def __init__(self):
-        HamsterAction.__init__(self, _("Start activity with description"))
+        Action.__init__(self, _("Start activity with description"))
 
     def item_types(self):
         yield TextLeaf
@@ -280,9 +275,9 @@ class StartActivityWithDescription (HamsterAction):
         yield TextLeaf
 
 
-class ChangeStartTime (HamsterAction):
+class ChangeStartTime (Action):
     def __init__(self):
-        HamsterAction.__init__(self, _("Change start time"))
+        Action.__init__(self, _("Change start time"))
 
     def item_types(self):
         yield FactLeaf
@@ -318,9 +313,9 @@ class ChangeStartTime (HamsterAction):
         return icons.ComposedIconSmall(self.get_icon_name(), "media-playback-start")
 
 
-class ChangeEndTime (HamsterAction):
+class ChangeEndTime (Action):
     def __init__(self):
-        HamsterAction.__init__(self, _("Change end time"))
+        Action.__init__(self, _("Change end time"))
 
     def item_types(self):
         yield FactLeaf
