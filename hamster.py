@@ -66,6 +66,14 @@ def format_fact_string(activity, category=None, description=None, tags=None):
     return fact
 
 
+def parse_time(timestr):
+    parsed = time.strptime(timestr, "%H:%M")
+    now = time.localtime()
+    result = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday, parsed.tm_hour, parsed.tm_min,
+                               0, now.tm_wday, now.tm_yday, now.tm_isdst))
+    return time.mktime(result) - time.timezone
+
+
 class Toggle (Action):
     def __init__(self):
         Action.__init__(self, _("Open / Close"))
@@ -275,77 +283,55 @@ class StartActivityWithDescription (Action):
         yield TextLeaf
 
 
-class ChangeStartTime (Action):
-    def __init__(self):
-        Action.__init__(self, _("Change start time"))
-
+class FactEditAction (Action):
+    '''abstract action to edit properties of a fact'''
     def item_types(self):
         yield FactLeaf
+
+    def has_result(self):
+        return True
+
+    def requires_object(self):
+        return True
+
+    def object_types(self):
+        yield TextLeaf
+
+    def get_icon_name(self):
+        return "gtk-edit"
+
+    def update_fact(self, leaf):
+        fact = format_fact_string(leaf.activity, leaf.category, leaf.description, leaf.tags)
+        pretty.print_debug(__name__, "Going to update fact %d: %s" % (leaf.id, fact))
+        leaf.id = get_hamster().UpdateFact(leaf.id, fact, leaf.starttime, leaf.endtime, False)
+        return leaf
+
+
+class ChangeStartTime (FactEditAction):
+    def __init__(self):
+        Action.__init__(self, _("Change start time"))
 
     def get_description(self):
         return _("Change the start time (format: hh:mm) of a Hamster activty")
 
     def activate(self, leaf, iobj):
-        fact = format_fact_string(leaf.activity, leaf.category, leaf.description, leaf.tags)
-        parsed = time.strptime(iobj.object, "%H:%M")
-        now = time.localtime()
-        result = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday, parsed.tm_hour, parsed.tm_min,
-                                   0, now.tm_wday, now.tm_yday, now.tm_isdst))
-        starttime = time.mktime(result) - time.timezone
-        pretty.print_debug(__name__, "Going to update fact %d: %s" % (leaf.id, fact))
-        leaf.id = get_hamster().UpdateFact(leaf.id, fact, starttime, leaf.endtime, False)
-        leaf.starttime = starttime
-        return leaf
-
-    def has_result(self):
-        return True
-
-    def requires_object(self):
-        return True
-
-    def object_types(self):
-        yield TextLeaf
-
-    def get_icon_name(self):
-        return "gtk-edit"
+        leaf.starttime = parse_time(iobj.object)
+        return self.update_fact(leaf)
 
     def get_gicon(self):
         return icons.ComposedIconSmall(self.get_icon_name(), "media-playback-start")
 
 
-class ChangeEndTime (Action):
+class ChangeEndTime (FactEditAction):
     def __init__(self):
         Action.__init__(self, _("Change end time"))
-
-    def item_types(self):
-        yield FactLeaf
 
     def get_description(self):
         return _("Change the end time (format: hh:mm) of a Hamster activty")
 
     def activate(self, leaf, iobj):
-        fact = format_fact_string(leaf.activity, leaf.category, leaf.description, leaf.tags)
-        parsed = time.strptime(iobj.object, "%H:%M")
-        now = time.localtime()
-        result = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday, parsed.tm_hour, parsed.tm_min,
-                                   0, now.tm_wday, now.tm_yday, now.tm_isdst))
-        endtime = time.mktime(result) - time.timezone
-        pretty.print_debug(__name__, "Going to update fact %d: %s" % (leaf.id, fact))
-        leaf.id = get_hamster().UpdateFact(leaf.id, fact, leaf.starttime, endtime, False)
-        leaf.endtime = endtime
-        return leaf
-
-    def has_result(self):
-        return True
-
-    def requires_object(self):
-        return True
-
-    def object_types(self):
-        yield TextLeaf
-
-    def get_icon_name(self):
-        return "gtk-edit"
+        leaf.endtime = parse_time(iobj.object)
+        return self.update_fact(leaf)
 
     def get_gicon(self):
         return icons.ComposedIconSmall(self.get_icon_name(), "media-playback-stop")
