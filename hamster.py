@@ -155,13 +155,18 @@ class StartActivity (Action):
         yield ActivityLeaf
 
     def activate(self, leaf):
-        get_hamster().AddFact(leaf.object, time.time() - time.timezone, 0, False)
+        fact_id = get_hamster().AddFact(leaf.object, time.time() - time.timezone, 0, False)
+        fact = get_hamster().GetFact(fact_id)
+        return FactLeaf(fact)
 
     def get_description(self):
         return _("Start tracking the activity in Hamster")
 
     def get_icon_name(self):
         return "media-playback-start"
+
+    def has_result(self):
+        return True
 
 
 class StartActivityWithTags (Action):
@@ -173,7 +178,7 @@ class StartActivityWithTags (Action):
         yield ActivityLeaf
 
     def activate(self, leaf, iobj):
-        self.activate_multiple([leaf], [iobj])
+        return self.activate_multiple([leaf], [iobj])
 
     def activate_multiple(self, leafs, iobjs):
         # use the first direct object, as it makes no sense to use more than one
@@ -182,7 +187,9 @@ class StartActivityWithTags (Action):
         tags = ['#' + str(io.object) for io in iobjs]
         fact = leaf.object + ', ' + ' '.join(tags)
         pretty.print_debug(__name__, "Adding fact: " + fact)
-        get_hamster().AddFact(fact, time.time() - time.timezone, 0, False)
+        fact_id = get_hamster().AddFact(fact, time.time() - time.timezone, 0, False)
+        fact = get_hamster().GetFact(fact_id)
+        return FactLeaf(fact)
 
     def get_description(self):
         return _("Start tracking the activity with tags in Hamster")
@@ -202,6 +209,9 @@ class StartActivityWithTags (Action):
 
     def object_source(self, for_item):
         return TagsSource()
+
+    def has_result(self):
+        return True
 
 
 class StartActivityWithTagsAndDescription (Action):
@@ -265,7 +275,9 @@ class StartActivityWithDescription (Action):
         yield ActivityLeaf
 
     def activate(self, leaf, iobj):
-        get_hamster().AddFact(leaf.object + ', ' + iobj.object, time.time() - time.timezone, 0, False)
+        fact_id = get_hamster().AddFact(leaf.object + ', ' + iobj.object, time.time() - time.timezone, 0, False)
+        fact = get_hamster().GetFact(fact_id)
+        return FactLeaf(fact)
 
     def get_description(self):
         return _("Start tracking the activity with description in Hamster")
@@ -281,6 +293,9 @@ class StartActivityWithDescription (Action):
 
     def object_types(self):
         yield TextLeaf
+
+    def has_result(self):
+        return True
 
 
 class FactEditAction (Action):
