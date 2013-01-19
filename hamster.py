@@ -58,7 +58,7 @@ def format_duration(seconds):
     return timestr
 
 def format_time(seconds):
-    tm = time.localtime(seconds)
+    tm = time.gmtime(seconds)
     return time.strftime("%H:%M", tm)
 
 
