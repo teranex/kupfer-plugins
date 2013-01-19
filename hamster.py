@@ -280,8 +280,6 @@ class StartActivityWithDescription (HamsterAction):
         yield TextLeaf
 
 
-# TODO: bug: when launching the same action again it duplicates the action
-#            probably the ID was updated or something
 class ChangeStartTime (HamsterAction):
     def __init__(self):
         HamsterAction.__init__(self, _("Change start time"))
@@ -297,10 +295,15 @@ class ChangeStartTime (HamsterAction):
         parsed = time.strptime(iobj.object, "%H:%M")
         now = time.localtime()
         result = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday, parsed.tm_hour, parsed.tm_min,
-                                  0, now.tm_wday, now.tm_yday, now.tm_isdst))
+                                   0, now.tm_wday, now.tm_yday, now.tm_isdst))
         starttime = time.mktime(result) - time.timezone
-        pretty.print_debug(__name__, fact)
-        get_hamster().UpdateFact(leaf.id, fact, starttime, leaf.endtime, False)
+        pretty.print_debug(__name__, "Going to update fact %d: %s" % (leaf.id, fact))
+        leaf.id = get_hamster().UpdateFact(leaf.id, fact, starttime, leaf.endtime, False)
+        leaf.starttime = starttime
+        return leaf
+
+    def has_result(self):
+        return True
 
     def requires_object(self):
         return True
@@ -330,10 +333,15 @@ class ChangeEndTime (HamsterAction):
         parsed = time.strptime(iobj.object, "%H:%M")
         now = time.localtime()
         result = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday, parsed.tm_hour, parsed.tm_min,
-                                  0, now.tm_wday, now.tm_yday, now.tm_isdst))
+                                   0, now.tm_wday, now.tm_yday, now.tm_isdst))
         endtime = time.mktime(result) - time.timezone
-        pretty.print_debug(__name__, fact)
-        get_hamster().UpdateFact(leaf.id, fact, leaf.starttime, endtime, False)
+        pretty.print_debug(__name__, "Going to update fact %d: %s" % (leaf.id, fact))
+        leaf.id = get_hamster().UpdateFact(leaf.id, fact, leaf.starttime, endtime, False)
+        leaf.endtime = endtime
+        return leaf
+
+    def has_result(self):
+        return True
 
     def requires_object(self):
         return True
@@ -422,14 +430,19 @@ class TagLeaf (Leaf):
 
 
 class FactLeaf (Leaf):
-    def __init__(self, id, activity, category):
-        name = activity
-        if category:
-            name += "@" + category
+    # TODO directly accept the entire data from dbus
+    def __init__(self, fact):
+        name = fact[4]
+        if fact[6]:
+            name += "@" + fact[6]
         Leaf.__init__(self, id, name)
-        self.id = id
-        self.activity = activity
-        self.category = category
+        self.id = fact[0]
+        self.activity = fact[4]
+        self.category = fact[6]
+        self.starttime = fact[1]
+        self.endtime = fact[2]
+        self.description = fact[3]
+        self.tags = fact[7]
 
     def get_icon_name(self):
         return "hamster-indicator"
@@ -500,13 +513,8 @@ class FactsSource (Source):
         return ()
 
     def get_items(self):
-        facts = get_hamster().GetTodaysFacts()
-        for f in facts:
-            leaf = FactLeaf(f[0], f[4], f[6])
-            leaf.starttime = f[1]
-            leaf.endtime = f[2]
-            leaf.description = f[3]
-            leaf.tags = f[7]
+        for fact in get_hamster().GetTodaysFacts():
+            leaf = FactLeaf(fact)
             yield leaf
 
 
