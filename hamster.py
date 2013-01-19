@@ -21,6 +21,13 @@ __kupfer_settings__ = plugin_support.PluginSettings(
         "label": _("Include activities in top level"),
         "type": bool,
         "value": True,
+    },
+    {
+        "key": "return_started_facts",
+        "label": _("When starting an activity immediately re-open Kupfer with the new activity focused. "
+                   "This will let you easily further modify the start and endtime, tags and description."),
+        "type": bool,
+        "value": True,
     }
 )
 
@@ -156,8 +163,9 @@ class StartActivity (Action):
 
     def activate(self, leaf):
         fact_id = get_hamster().AddFact(leaf.object, time.time() - time.timezone, 0, False)
-        fact = get_hamster().GetFact(fact_id)
-        return FactLeaf(fact)
+        if __kupfer_settings__["return_started_facts"]:
+            fact = get_hamster().GetFact(fact_id)
+            return FactLeaf(fact)
 
     def get_description(self):
         return _("Start tracking the activity in Hamster")
@@ -166,7 +174,7 @@ class StartActivity (Action):
         return "media-playback-start"
 
     def has_result(self):
-        return True
+        return __kupfer_settings__["return_started_facts"]
 
 
 class StartActivityWithTags (Action):
@@ -188,8 +196,9 @@ class StartActivityWithTags (Action):
         fact = leaf.object + ', ' + ' '.join(tags)
         pretty.print_debug(__name__, "Adding fact: " + fact)
         fact_id = get_hamster().AddFact(fact, time.time() - time.timezone, 0, False)
-        fact = get_hamster().GetFact(fact_id)
-        return FactLeaf(fact)
+        if __kupfer_settings__["return_started_facts"]:
+            fact = get_hamster().GetFact(fact_id)
+            return FactLeaf(fact)
 
     def get_description(self):
         return _("Start tracking the activity with tags in Hamster")
@@ -211,7 +220,7 @@ class StartActivityWithTags (Action):
         return TagsSource()
 
     def has_result(self):
-        return True
+        return __kupfer_settings__["return_started_facts"]
 
 
 class StartActivityWithDescription (Action):
@@ -224,8 +233,9 @@ class StartActivityWithDescription (Action):
 
     def activate(self, leaf, iobj):
         fact_id = get_hamster().AddFact(leaf.object + ', ' + iobj.object, time.time() - time.timezone, 0, False)
-        fact = get_hamster().GetFact(fact_id)
-        return FactLeaf(fact)
+        if __kupfer_settings__["return_started_facts"]:
+            fact = get_hamster().GetFact(fact_id)
+            return FactLeaf(fact)
 
     def get_description(self):
         return _("Start tracking the activity with description in Hamster")
@@ -243,7 +253,7 @@ class StartActivityWithDescription (Action):
         yield TextLeaf
 
     def has_result(self):
-        return True
+        return __kupfer_settings__["return_started_facts"]
 
 
 class FactEditAction (Action):
