@@ -49,13 +49,17 @@ def get_hamster():
     return None
 
 
-def format_time(seconds):
+def format_duration(seconds):
     hours, remainder = divmod(seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     timestr = '%dmin' % minutes
     if hours > 0:
         timestr = ('%dh ' % hours) + timestr
     return timestr
+
+def format_time(seconds):
+    tm = time.localtime(seconds)
+    return time.strftime("%H:%M", tm)
 
 
 def format_fact_string(activity, category=None, description=None, tags=None):
@@ -410,10 +414,10 @@ class ShowHamsterInfo (RunnableLeaf):
                 end = time.time() - time.timezone
             duration = end - f[1]
             total += duration
-        notification_body = "Total time today: %s" % format_time(total)
+        notification_body = "Total time today: %s" % format_duration(total)
         if current:
             notification_body += "\nCurrent: %s@%s (%s)" % (current[4], current[6],
-                                                            format_time(time.time() - time.timezone - current[1]))
+                                                            format_duration(time.time() - time.timezone - current[1]))
         ShowHamsterInfo.notification_id = uiutils.show_notification('Hamster Info',
                                           notification_body, 'hamster-indicator', ShowHamsterInfo.notification_id)
 
@@ -466,6 +470,13 @@ class FactLeaf (Leaf):
         yield ChangeDescription()
         yield ChangeTags()
         yield Remove()
+
+    def get_description(self):
+        start = format_time(self.starttime)
+        end = ''
+        if self.endtime:
+            end = format_time(self.endtime)
+        return "%s - %s" % (start, end)
 
 
 class ActivitiesSource (Source):
