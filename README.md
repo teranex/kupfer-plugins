@@ -4,7 +4,7 @@
 This plugin let's you tweet directly from Kupfer using the running Hotot instance. It also
 let's you easily show, hide and quit the running Hotot instance.
 
-![Hotot screenshot](https://raw.github.com/teranex/kupfer-plugins/master/doc/screenshots/hotot-1.png "Sending a tweet"
+![Hotot screenshot](https://raw.github.com/teranex/kupfer-plugins/master/doc/screenshots/hotot-1.png "Sending a tweet")
 
 ## Media players
 This plugin can be used to command any mpris2-enabled media player. Tested with Banshee,
