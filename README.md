@@ -47,22 +47,22 @@ The plugin lets you edit activities. To do this, first search for the 'Hamster
 Facts'-catalog. (Note: for the moment only activities of the current day are accessible).
 Then select the activity you want to edit. You can edit the following:
   * Start time: you can enter a new start time in the third pane. The format must be H:MM
-  or HH:MM
+    or HH:MM
   * End time: change the end time for the task. The format must be H:MM or HH:MM
   * Description: enter a new description in the third pane. (Use . to open text-mode)
   * Tags: enter new tags. You can use the comma trick and text-mode to create new and
-  select multiple tags. Note: all previous tags are removed.
+    select multiple tags. Note: all previous tags are removed.
   * Remove: remove the activity. (this can not be undone!)
 
 ![Hamster screenshot](https://raw.github.com/teranex/kupfer-plugins/master/doc/screenshots/hamster-2.png "Editing the end time")
 
 ### Notes
-    * Note: a patch is needed in Kupfer! The patch can be found in comment 19 in this
+  * Note: a patch is needed in Kupfer! The patch can be found in comment 19 in this
     issue report: https://bugs.launchpad.net/ubuntu/+source/kupfer/+bug/1038434 Without
     this patch, Kupfer will crash with a Segmentation Fault.
-    * Please test that all times are correct. I'm not yet 100% sure that timezones and DST
+  * Please test that all times are correct. I'm not yet 100% sure that timezones and DST
     are handled correctly.
-    * Make a backup of your Hamster database. I'm not responsible if things explode :)
+  * Make a backup of your Hamster database. I'm not responsible if things explode :)
 
 
 <!---
