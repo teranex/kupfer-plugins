@@ -32,7 +32,6 @@ __kupfer_settings__ = plugin_support.PluginSettings(
 )
 
 # TODO: add to README.md (XXX: describe patch needed)
-# TODO: timezones + daylight savings time correct?
 
 HAMSTER_APPNAMES = ("hamster-indicator", "hamster-time-tracker", )
 
@@ -56,6 +55,7 @@ def format_duration(seconds):
     if hours > 0:
         timestr = ('%dh ' % hours) + timestr
     return timestr
+
 
 def format_time(seconds):
     tm = time.gmtime(seconds)
@@ -82,7 +82,20 @@ def parse_time(timestr):
     now = time.localtime()
     result = time.struct_time((now.tm_year, now.tm_mon, now.tm_mday, parsed.tm_hour, parsed.tm_min,
                                0, now.tm_wday, now.tm_yday, now.tm_isdst))
-    return time.mktime(result) - time.timezone
+    return get_timestamp(result)
+
+
+def get_timestamp(time_struct=None):
+    if not time_struct:
+        time_struct = time.gmtime()
+        secs = time.time()
+    else:
+        secs = time.mktime(time_struct)
+    if time.daylight and time_struct.tm_isdst:
+        secs -= time.altzone
+    else:
+        secs -= time.timezone
+    return secs
 
 
 class Toggle (Action):
@@ -166,7 +179,7 @@ class StartActivity (Action):
         yield ActivityLeaf
 
     def activate(self, leaf):
-        fact_id = get_hamster().AddFact(leaf.object, time.time() - time.timezone, 0, False)
+        fact_id = get_hamster().AddFact(leaf.object, get_timestamp(), 0, False)
         if __kupfer_settings__["return_started_facts"]:
             fact = get_hamster().GetFact(fact_id)
             return FactLeaf(fact)
@@ -199,7 +212,7 @@ class StartActivityWithTags (Action):
         tags = ['#' + str(io.object) for io in iobjs]
         fact = leaf.object + ', ' + ' '.join(tags)
         pretty.print_debug(__name__, "Adding fact: " + fact)
-        fact_id = get_hamster().AddFact(fact, time.time() - time.timezone, 0, False)
+        fact_id = get_hamster().AddFact(fact, get_timestamp(), 0, False)
         if __kupfer_settings__["return_started_facts"]:
             fact = get_hamster().GetFact(fact_id)
             return FactLeaf(fact)
@@ -236,7 +249,7 @@ class StartActivityWithDescription (Action):
         yield ActivityLeaf
 
     def activate(self, leaf, iobj):
-        fact_id = get_hamster().AddFact(leaf.object + ', ' + iobj.object, time.time() - time.timezone, 0, False)
+        fact_id = get_hamster().AddFact(leaf.object + ', ' + iobj.object, get_timestamp(), 0, False)
         if __kupfer_settings__["return_started_facts"]:
             fact = get_hamster().GetFact(fact_id)
             return FactLeaf(fact)
@@ -388,7 +401,7 @@ class StopTrackingLeaf (RunnableLeaf):
         return "media-playback-stop"
 
     def run(self):
-        get_hamster().StopTracking(time.time() - time.timezone)
+        get_hamster().StopTracking(get_timestamp())
 
 
 class ShowHamsterInfo (RunnableLeaf):
@@ -411,13 +424,13 @@ class ShowHamsterInfo (RunnableLeaf):
             end = f[2]
             if end == 0:
                 current = f
-                end = time.time() - time.timezone
+                end = get_timestamp()
             duration = end - f[1]
             total += duration
         notification_body = "Total time today: %s" % format_duration(total)
         if current:
             notification_body += "\nCurrent: %s@%s (%s)" % (current[4], current[6],
-                                                            format_duration(time.time() - time.timezone - current[1]))
+                                                            format_duration(get_timestamp() - current[1]))
         ShowHamsterInfo.notification_id = uiutils.show_notification('Hamster Info',
                                           notification_body, 'hamster-indicator', ShowHamsterInfo.notification_id)
 
