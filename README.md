@@ -12,7 +12,4 @@ currently playing track, seek forward and backward and so on.
 For this to work the medi player should implement Mpris2 and it should be enabled. For
 example in Banshee you should enable the 'MPRIS D-Bus interface'-extension.
 
-## MPRIS2
-This plugin is deprecated in favor of the Media players plugin. Use that one instead
-
 %% vim:textwidth=90:wrap:
