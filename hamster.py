@@ -31,8 +31,6 @@ __kupfer_settings__ = plugin_support.PluginSettings(
     }
 )
 
-# TODO: add to README.md (XXX: describe patch needed)
-
 HAMSTER_APPNAMES = ("hamster-indicator", "hamster-time-tracker", )
 
 plugin_support.check_dbus_connection()
@@ -63,7 +61,6 @@ def format_time(seconds):
 
 
 def format_fact_string(activity, category=None, description=None, tags=None):
-    # TODO: use whenever possible
     fact = activity
     if category:
         fact += "@" + category
@@ -387,7 +384,6 @@ class Remove (Action):
 
 
 class StopTrackingLeaf (RunnableLeaf):
-    #TODO: this only makes sense when an activity is being tracked
     def __init__(self):
         RunnableLeaf.__init__(self, name=_("Stop tracking"))
 
@@ -529,9 +525,6 @@ class TagsSource (Source):
 
 
 class FactsSource (Source):
-    # TODO: make sure the same fact with different start and endtimes is not
-    # filtered out (=seen as duplicate), it should be available twice in that
-    # case, with different start/end times
     def __init__(self):
         Source.__init__(self, _("Hamster Facts"))
 
