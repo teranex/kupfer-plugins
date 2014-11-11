@@ -10,13 +10,13 @@ __author__ = "Jeroen Budts"
 import dbus
 
 from kupfer import pretty, plugin_support, icons, uiutils
-from kupfer.objects import Source, Leaf, Action, AppLeaf, FileLeaf
-from kupfer.obj.base import ActionGenerator
+from kupfer.objects import Source, Leaf, Action, AppLeaf
 from kupfer.weaklib import dbus_signal_connect_weakly
 from gio.unix import DesktopAppInfo
 from gio import FileIcon, File
 
 plugin_support.check_dbus_connection()
+
 
 # {{{ supporting classes and functions
 class MediaPlayer (object):
@@ -50,6 +50,11 @@ class MediaPlayer (object):
     def name(self):
         return self.get_root_property('DesktopEntry')
 
+    @property
+    def is_playing(self):
+        playback_status = self.get_player_property('PlaybackStatus')
+        return playback_status == 'Playing'
+
     def _get_property(self, target, property_name):
         properties_manager = dbus.Interface(self._dbus_obj, 'org.freedesktop.DBus.Properties')
         return properties_manager.Get(target, property_name)
@@ -76,14 +81,31 @@ class MediaPlayersRegistry (object):
     def __init__(self):
         self.reindex()
         self._setup_monitor()
+        self.last_used_player = ""
+        self._store_playing_player()
 
     def _setup_monitor(self):
         dbus_signal_connect_weakly(dbus.Bus(), 'NameOwnerChanged', self._signal_update,
                                    dbus_interface='org.freedesktop.DBus')
+        dbus_signal_connect_weakly(dbus.Bus(), 'PropertiesChanged', self._properties_changed,
+                                   dbus_interface='org.freedesktop.DBus.Properties')
 
     def _signal_update(self, *args):
         if len(args) > 0 and args[0].startswith('org.mpris.MediaPlayer2.'):
             self.reindex()
+
+    def _properties_changed(self, *args):
+        if len(args) > 1 and args[0].startswith('org.mpris.MediaPlayer2.'):
+            if 'PlaybackStatus' in args[1] and args[1]['PlaybackStatus'] == 'Playing':
+                # a media player started playing. Set it as the active player
+                # find the player and store it for later use
+                self._store_playing_player()
+
+    def _store_playing_player(self):
+        for player_name in self.active_players:
+            player = self.active_players[player_name]
+            if player.is_playing:
+                self.last_used_player = player_name
 
     def reindex(self):
         self.active_players = {}
@@ -100,8 +122,16 @@ class MediaPlayersRegistry (object):
 
     @property
     def players(self):
+        # then return all the other players
         for player in self.active_players:
-            yield player
+            if player != self.last_used_player:
+                pretty.print_debug(__name__, "other player: " + player)
+                yield player
+        # if there is an active player, return that last so it will be
+        # suggested
+        if self.last_used_player:
+            pretty.print_debug(__name__, "active player: " + self.last_used_player)
+            yield self.last_used_player
 
     def get_player(self, name):
         return self.active_players[name]
@@ -117,7 +147,7 @@ def format_metadata(meta):
     artists = meta.get('xesam:artist', [])
     length = meta.get('mpris:length', 0)
     # see http://stackoverflow.com/a/539360/306800
-    length = length / 1000000 # mpris gives the length in microseconds
+    length = length / 1000000  # mpris gives the length in microseconds
     hours, remainder = divmod(length, 3600)
     minutes, seconds = divmod(remainder, 60)
     duration = '%d:%02d:%02d' % (hours, minutes, seconds)
@@ -137,7 +167,6 @@ class RunningMediaPlayerTarget (Action):
     def __init__(self, player):
         self._player = media_players_registry.get_player(player)
         Action.__init__(self, player)
-
 
     def activate(self, leaf):
         pretty.print_debug(__name__, "activating for " + self._player.name)
@@ -425,10 +454,11 @@ class ShowPlayingLeaf (MediaPlayerCommandLeaf):
             pretty.print_debug(__name__, meta)
             title = meta.get('xesam:title', _('unknown'))
             icon = meta.get('mpris:artUrl', 'applications-multimedia')
-            ShowPlaying.notification_id = uiutils.show_notification(title,
-                                                                    format_metadata(meta).replace('&', '&amp;'),
-                                                                    icon,
-                                                                    ShowPlayingLeaf.notification_id)
+            ShowPlaying.notification_id \
+                = uiutils.show_notification(title,
+                                            format_metadata(meta).replace('&', '&amp;'),
+                                            icon,
+                                            ShowPlayingLeaf.notification_id)
 
 
 class RaiseLeaf (MediaPlayerCommandLeaf):
@@ -453,6 +483,7 @@ class SeekTimeLeaf (Leaf):
 
     def get_icon_name(self):
         return "gnome-set-time"
+
 
 class PlaylistLeaf (Leaf):
     '''A leaf to represent a playlist'''
