@@ -81,8 +81,6 @@ class MediaPlayersRegistry (object):
     def __init__(self):
         self.reindex()
         self._setup_monitor()
-        self.last_used_player = ""
-        self._store_playing_player()
 
     def _setup_monitor(self):
         dbus_signal_connect_weakly(dbus.Bus(), 'NameOwnerChanged', self._signal_update,
@@ -119,6 +117,8 @@ class MediaPlayersRegistry (object):
                 player = MediaPlayer(dbus_obj)
                 self.active_players[player.name] = player
                 pretty.print_debug(__name__, "registered player: %s (%s)" % (player.name, player))
+        self.last_used_player = ""
+        self._store_playing_player()
 
     @property
     def players(self):
