@@ -1,5 +1,6 @@
 __kupfer_name__ = _("Hamster")
 __description__ = _("Control the Hamster time tracker")
+__version__ = "2017.03.06"
 __author__ = "Jeroen Budts"
 __kupfer_actions__ = ("Toggle", "StartActivity", "StartActivityWithTags", "StartActivityWithDescription",
                       "Overview", "Statistics", "Preferences",)
@@ -41,7 +42,7 @@ def get_hamster():
         bus = dbus.SessionBus()
         dbusObj = bus.get_object('org.gnome.Hamster', '/org/gnome/Hamster')
         return dbus.Interface(dbusObj, dbus_interface='org.gnome.Hamster')
-    except dbus.exceptions.DBusException, err:
+    except dbus.exceptions.DBusException as err:
         pretty.print_debug(err)
     return None
 
