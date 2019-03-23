@@ -57,9 +57,6 @@ Then select the activity you want to edit. You can edit the following:
 ![Hamster screenshot](https://raw.github.com/teranex/kupfer-plugins/master/doc/screenshots/hamster-2.png "Editing the end time")
 
 ### Notes
-  * Note: a patch is needed in Kupfer! The patch can be found in comment 19 in this
-    issue report: https://bugs.launchpad.net/ubuntu/+source/kupfer/+bug/1038434 Without
-    this patch, Kupfer will crash with a Segmentation Fault.
   * Please test that all times are correct. I'm not yet 100% sure that timezones and DST
     are handled correctly.
   * Make a backup of your Hamster database. I'm not responsible if things explode :)
